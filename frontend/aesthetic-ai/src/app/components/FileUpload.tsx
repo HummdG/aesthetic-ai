@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Button } from "./ui/Button";
 
 interface FileUploadProps {
@@ -11,6 +12,12 @@ export default function FileUpload({
   onFileSelect,
   onCameraClick,
 }: FileUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleChooseClick = () => {
+    inputRef.current?.click();
+  };
+
   return (
     <div className="upload-area">
       <div className="text-center">
@@ -35,6 +42,16 @@ export default function FileUpload({
           Upload Photo for Analysis
         </h3>
 
+        {/* Hidden file input */}
+        <input
+          ref={inputRef}
+          id="file-upload"
+          type="file"
+          accept="image/*"
+          onChange={onFileSelect}
+          className="sr-only"
+        />
+
         <div className="mb-4 sm:mb-6">
           <label htmlFor="file-upload" className="cursor-pointer">
             <span className="text-sm sm:text-base text-gray-600">
@@ -43,39 +60,32 @@ export default function FileUpload({
             <span className="text-sm sm:text-base text-indigo-600 hover:text-indigo-500 font-medium transition-colors">
               browse files
             </span>
-            <input
-              id="file-upload"
-              type="file"
-              accept="image/*"
-              onChange={onFileSelect}
-              className="sr-only"
-            />
           </label>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4 sm:mb-6">
-          <label htmlFor="file-upload">
-            <Button
-              variant="primary"
-              className="btn-primary cursor-pointer w-full sm:w-auto"
+          {/* Choose File Button */}
+          <Button
+            onClick={handleChooseClick}
+            className="btn-primary cursor-pointer w-full sm:w-auto"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              Choose File
-            </Button>
-          </label>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            Choose File
+          </Button>
 
+          {/* Use Camera Button */}
           <Button
             onClick={onCameraClick}
             className="btn-secondary w-full sm:w-auto"
@@ -117,8 +127,8 @@ export default function FileUpload({
               >
                 <path
                   fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                   clipRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                 />
               </svg>
               <span>Clear, well-lit photo</span>
@@ -131,8 +141,8 @@ export default function FileUpload({
               >
                 <path
                   fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                   clipRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                 />
               </svg>
               <span>Face forward-facing</span>
@@ -145,8 +155,8 @@ export default function FileUpload({
               >
                 <path
                   fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                   clipRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                 />
               </svg>
               <span>Natural expression</span>
@@ -159,8 +169,8 @@ export default function FileUpload({
               >
                 <path
                   fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                   clipRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                 />
               </svg>
               <span>Minimal makeup preferred</span>

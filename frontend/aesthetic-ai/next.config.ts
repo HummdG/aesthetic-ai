@@ -55,7 +55,8 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            // CHANGED: Allow camera access for same origin
+            value: 'camera=(self), microphone=(), geolocation=()',
           },
         ],
       },

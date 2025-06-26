@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "./components/ui/Button";
 
 export default function Home() {
@@ -8,6 +8,12 @@ export default function Home() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraLoading, setCameraLoading] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -15,16 +21,119 @@ export default function Home() {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      setShowCamera(false); // Hide camera if showing
+      if (cameraStream) {
+        stopCamera();
+      }
     }
   };
 
   const handleCameraCapture = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      console.log("Camera access granted");
+      console.log("Requesting camera access...");
+      setCameraLoading(true);
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user",
+        },
+      });
+
+      console.log("Camera stream obtained:", stream);
+      setCameraStream(stream);
+      setShowCamera(true);
+      setPreviewUrl(null);
+
+      // Wait for video element to be in DOM
+      setTimeout(() => {
+        const video = videoRef.current;
+        if (video && stream) {
+          console.log("Setting up video element...");
+          video.srcObject = stream;
+
+          video.onloadedmetadata = () => {
+            console.log(
+              "Video metadata loaded, dimensions:",
+              video.videoWidth,
+              video.videoHeight
+            );
+            setCameraLoading(false);
+            video.play().catch((e) => console.error("Play error:", e));
+          };
+
+          video.oncanplay = () => {
+            console.log("Video can play");
+            setCameraLoading(false);
+          };
+
+          video.onerror = (e) => {
+            console.error("Video error:", e);
+            setCameraLoading(false);
+          };
+
+          // Force play as backup
+          video.play().catch((e) => console.error("Immediate play error:", e));
+        }
+      }, 200);
     } catch (error) {
-      console.error("Camera access denied:", error);
+      console.error("Camera access error:", error);
+      setCameraLoading(false);
+      alert(
+        "Camera access denied or not available. Please check your camera permissions."
+      );
     }
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    if (!context) return;
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Flip the canvas horizontally to un-mirror the image
+    context.save();
+    context.scale(-1, 1);
+    context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    context.restore();
+
+    // Convert canvas to blob and create file
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const file = new File([blob], "camera-capture.jpg", {
+            type: "image/jpeg",
+          });
+          setSelectedFile(file);
+
+          // Create preview URL
+          const url = URL.createObjectURL(blob);
+          setPreviewUrl(url);
+
+          // Stop camera and hide camera view
+          stopCamera();
+        }
+      },
+      "image/jpeg",
+      0.9
+    );
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setShowCamera(false);
+    setCameraLoading(false);
   };
 
   const analyzeImage = async () => {
@@ -68,6 +177,8 @@ export default function Home() {
     setSelectedFile(null);
     setPreviewUrl(null);
     setAnalysis(null);
+    setCameraLoading(false);
+    stopCamera();
   };
 
   return (
@@ -123,7 +234,67 @@ export default function Home() {
                   Patient Photo Upload
                 </h2>
 
-                {!previewUrl ? (
+                {showCamera ? (
+                  /* Camera View */
+                  <div className="space-y-4">
+                    <div
+                      className="relative bg-black rounded-lg overflow-hidden"
+                      style={{ minHeight: "256px" }}
+                    >
+                      <video
+                        ref={videoRef}
+                        className="w-full h-64 object-cover"
+                        autoPlay
+                        playsInline
+                        muted
+                        style={{
+                          transform: "scaleX(-1)",
+                          minHeight: "256px",
+                          display: cameraLoading ? "none" : "block",
+                        }}
+                        onCanPlay={() => {
+                          console.log("Video can play event");
+                          setCameraLoading(false);
+                        }}
+                        onLoadedData={() => {
+                          console.log("Video loaded data");
+                          setCameraLoading(false);
+                        }}
+                        onError={(e) => {
+                          console.error("Video error:", e);
+                          setCameraLoading(false);
+                        }}
+                      />
+                      {/* Loading indicator */}
+                      {cameraLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                          <div className="text-white text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                            <p>Loading camera...</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="primary"
+                        onClick={capturePhoto}
+                        disabled={cameraLoading}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white border-0 disabled:opacity-50"
+                      >
+                        📸 Take Photo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={stopCamera}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : !previewUrl ? (
+                  /* Upload Interface */
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
                     <div className="text-center">
                       <svg
@@ -169,9 +340,9 @@ export default function Home() {
                         </label>
 
                         <Button
-                          variant="outline"
+                          variant="primary"
                           onClick={handleCameraCapture}
-                          className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2"
+                          className="bg-green-600 hover:bg-green-700 text-white border-0 px-6 py-2"
                         >
                           <svg
                             className="w-4 h-4 mr-2"
@@ -202,6 +373,7 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
+                  /* Photo Preview */
                   <div className="space-y-4">
                     <div className="relative">
                       <img
@@ -312,17 +484,23 @@ export default function Home() {
                                   </span>
                                   <span>{rec.area}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                  <span className="font-medium">
-                                    Recommended Dosage:
-                                  </span>
-                                  <span>{rec.dosage || rec.volume}</span>
-                                </div>
+                                {rec.dosage && (
+                                  <div className="flex justify-between">
+                                    <span className="font-medium">Dosage:</span>
+                                    <span>{rec.dosage}</span>
+                                  </div>
+                                )}
+                                {rec.volume && (
+                                  <div className="flex justify-between">
+                                    <span className="font-medium">Volume:</span>
+                                    <span>{rec.volume}</span>
+                                  </div>
+                                )}
                                 <div className="flex justify-between">
                                   <span className="font-medium">
                                     Estimated Cost:
                                   </span>
-                                  <span className="font-medium text-gray-900">
+                                  <span className="font-semibold text-gray-900">
                                     {rec.estimatedCost}
                                   </span>
                                 </div>
@@ -333,16 +511,19 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Next Steps */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h4 className="font-medium text-blue-900 mb-2">
-                        Recommended Next Steps
-                      </h4>
-                      <p className="text-sm text-blue-800">
-                        Schedule a consultation with a board-certified aesthetic
-                        practitioner to discuss these recommendations and
-                        develop a personalized treatment plan based on your
-                        aesthetic goals.
+                    {/* Total Estimated Cost */}
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-blue-900">
+                          Total Estimated Cost Range
+                        </span>
+                        <span className="text-xl font-semibold text-blue-900">
+                          $1,300 - $1,700
+                        </span>
+                      </div>
+                      <p className="text-xs text-blue-700 mt-2">
+                        Costs may vary based on practitioner, location, and
+                        specific treatment requirements
                       </p>
                     </div>
                   </div>
@@ -351,6 +532,9 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Hidden canvas for photo capture */}
+        <canvas ref={canvasRef} style={{ display: "none" }} />
       </main>
     </div>
   );

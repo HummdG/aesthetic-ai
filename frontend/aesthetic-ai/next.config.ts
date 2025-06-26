@@ -3,14 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* Core Configuration */
   reactStrictMode: true,
-  swcMinify: true,
   
   /* Performance & Optimization */
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    serverComponentsExternalPackages: ['sharp'],
-    typedRoutes: true,
+    // Removed typedRoutes as it's not supported with Turbopack
   },
+  
+  /* Server External Packages (updated from experimental.serverComponentsExternalPackages) */
+  serverExternalPackages: ['sharp'],
   
   /* Image Configuration */
   images: {
@@ -80,29 +81,6 @@ const nextConfig: NextConfig = {
   /* Build Configuration */
   output: 'standalone',
   
-  /* Webpack Configuration */
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Custom webpack config for AI/ML libraries
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-      crypto: false,
-    };
-    
-    // Optimize for AI image processing
-    if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'sharp$': false,
-        'onnxruntime-node$': false,
-      };
-    }
-    
-    return config;
-  },
-  
   /* TypeScript Configuration */
   typescript: {
     ignoreBuildErrors: false,
@@ -119,31 +97,12 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   
-  /* API Routes */
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-    responseLimit: '10mb',
-  },
-  
-  /* Internationalization (if needed) */
-  // i18n: {
-  //   locales: ['en'],
-  //   defaultLocale: 'en',
-  // },
-  
   /* Logging */
   logging: {
     fetches: {
       fullUrl: true,
     },
   },
-  
-  /* Bundle Analyzer (uncomment to use) */
-  // bundleAnalyzer: {
-  //   enabled: process.env.ANALYZE === 'true',
-  // },
 };
 
 export default nextConfig;

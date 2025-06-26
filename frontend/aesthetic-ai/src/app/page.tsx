@@ -2,12 +2,27 @@
 
 import { useState, useRef } from "react";
 import { Button } from "./components/ui/Button";
+import Image from "next/image";
+
+interface TreatmentRecommendation {
+  treatment: string;
+  area: string;
+  severity: string;
+  dosage?: string;
+  volume?: string;
+  estimatedCost: string;
+}
+
+interface AnalysisResult {
+  confidence: number;
+  recommendations: TreatmentRecommendation[];
+}
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraLoading, setCameraLoading] = useState(false);
@@ -376,9 +391,11 @@ export default function Home() {
                   /* Photo Preview */
                   <div className="space-y-4">
                     <div className="relative">
-                      <img
+                      <Image
                         src={previewUrl}
                         alt="Patient photo"
+                        width={640}
+                        height={256}
                         className="w-full h-64 object-cover rounded-lg border border-gray-200"
                       />
                     </div>
@@ -463,7 +480,7 @@ export default function Home() {
 
                       <div className="space-y-4">
                         {analysis.recommendations.map(
-                          (rec: any, index: number) => (
+                          (rec: TreatmentRecommendation, index: number) => (
                             <div
                               key={index}
                               className="border border-gray-200 rounded-lg p-4"

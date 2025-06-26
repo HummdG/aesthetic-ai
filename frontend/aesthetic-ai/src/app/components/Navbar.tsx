@@ -18,7 +18,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-200 fixed top-0 w-full z-50 shadow-sm">
+    <nav className="sticky top-0 w-full z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -72,7 +72,7 @@ export default function Navbar() {
             <button
               onClick={toggleMenu}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-indigo-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors duration-200"
-              aria-expanded="false"
+              aria-expanded={isMenuOpen}
             >
               <span className="sr-only">Open main menu</span>
               {!isMenuOpen ? (
@@ -115,7 +115,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden transition-all duration-300 ease-in-out fixed top-16 left-0 right-0 z-40 ${
+        className={`md:hidden transition-all duration-300 ease-in-out top-full left-0 right-0 z-40 ${
           isMenuOpen
             ? "max-h-96 opacity-100"
             : "max-h-0 opacity-0 overflow-hidden"

@@ -1,8 +1,14 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
-import { cn } from "@/app/lib/utils"; // Fixed import path
+import { cn } from "@/app/lib/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "destructive" | "outline";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "ghost"
+    | "destructive"
+    | "outline"
+    | "nude";
   size?: "sm" | "md" | "lg" | "xl";
   loading?: boolean;
   icon?: React.ReactNode;
@@ -25,24 +31,26 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center rounded-full font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:pointer-events-none disabled:opacity-50";
+      "inline-flex items-center justify-center rounded-full font-body font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-nude-50 disabled:pointer-events-none disabled:opacity-50 tracking-wide";
 
     const variants = {
       primary:
-        "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105",
+        "bg-gradient-to-r from-primary via-primary-hover to-brown-600 hover:from-primary-hover hover:to-brown-700 text-white shadow-elegant hover:shadow-elegant-lg transform hover:scale-105 hover:-translate-y-0.5",
       secondary:
-        "border-2 border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white",
-      ghost: "text-gray-300 hover:text-white hover:bg-white/5",
-      destructive: "bg-red-600 hover:bg-red-700 text-white shadow-lg",
+        "border-2 border-primary text-primary hover:bg-primary hover:text-white shadow-elegant hover:shadow-elegant-lg transform hover:scale-105",
+      nude: "bg-gradient-to-r from-nude-200 to-cream-200 hover:from-nude-300 hover:to-cream-300 text-brown-800 shadow-elegant hover:shadow-elegant-lg transform hover:scale-105",
+      ghost: "text-brown-700 hover:text-primary hover:bg-nude-100 rounded-full",
+      destructive:
+        "bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white shadow-elegant",
       outline:
-        "border border-gray-300 bg-transparent hover:bg-gray-50 text-gray-900 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800",
+        "border-2 border-nude-300 bg-transparent hover:bg-nude-100 text-brown-800 hover:border-primary hover:text-primary shadow-elegant",
     };
 
     const sizes = {
-      sm: "h-9 px-4 py-2 text-sm",
-      md: "h-11 px-6 py-3 text-base",
-      lg: "h-13 px-8 py-4 text-lg",
-      xl: "h-15 px-10 py-5 text-xl",
+      sm: "h-10 px-6 py-2 text-sm",
+      md: "h-12 px-8 py-3 text-base",
+      lg: "h-14 px-10 py-4 text-lg",
+      xl: "h-16 px-12 py-5 text-xl",
     };
 
     const iconSizes = {
@@ -59,18 +67,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || loading}
         {...props}
       >
-        {loading && (
-          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white"></div>
-        )}
+        {loading && <div className="loading-spinner small mr-3"></div>}
 
         {icon && iconPosition === "left" && !loading && (
-          <span className={cn("mr-2", iconSizes[size])}>{icon}</span>
+          <span className={cn("mr-3", iconSizes[size])}>{icon}</span>
         )}
 
-        {children}
+        <span className="relative">{children}</span>
 
         {icon && iconPosition === "right" && !loading && (
-          <span className={cn("ml-2", iconSizes[size])}>{icon}</span>
+          <span className={cn("ml-3", iconSizes[size])}>{icon}</span>
         )}
       </button>
     );

@@ -55,7 +55,7 @@ try:
         llm = None
     else:
         llm = ChatOpenAI(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             temperature=0.9,  # High temperature for variation
             openai_api_key=openai_key
         )

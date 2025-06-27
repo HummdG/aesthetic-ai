@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Playfair_Display, Crimson_Text } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 
-const inter = Inter({
-  variable: "--font-inter",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const crimson = Crimson_Text({
+  variable: "--font-crimson",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -20,6 +29,9 @@ export const metadata: Metadata = {
     "cosmetic treatments",
     "aesthetic AI",
     "beauty technology",
+    "skincare analysis",
+    "peptide skincare",
+    "advanced skincare",
   ],
   authors: [{ name: "Aesthetic AI Team" }],
   creator: "Aesthetic AI",
@@ -76,13 +88,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${playfair.variable} ${crimson.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
-        className="antialiased bg-gray-50 text-gray-900"
+        className="antialiased bg-gradient-to-br from-nude-50 via-cream-100 to-nude-100 text-brown-900 font-body"
         suppressHydrationWarning={true}
       >
         <Navbar />
-        <main>{children}</main>
+        <main className="min-h-screen">{children}</main>
       </body>
     </html>
   );

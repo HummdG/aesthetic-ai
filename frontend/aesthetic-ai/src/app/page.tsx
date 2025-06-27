@@ -1,59 +1,194 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import UploadSection from "./components/UploadSection";
 import AnalysisResults from "./components/AnalysisResults";
 import { AnalysisResult } from "./types/analysis";
+import { apiClient, validateImageFile } from "./utils/api";
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [backendStatus, setBackendStatus] = useState<
+    "checking" | "online" | "offline"
+  >("checking");
+
+  // Check backend status on load
+  useEffect(() => {
+    checkBackendStatus();
+  }, []);
+
+  const checkBackendStatus = async () => {
+    try {
+      await apiClient.healthCheck();
+      setBackendStatus("online");
+      console.log("✅ Backend is online");
+    } catch (error) {
+      setBackendStatus("offline");
+      console.log("❌ Backend is offline:", error);
+    }
+  };
 
   const handleAnalysisStart = async (file: File) => {
+    console.log("🎯 Starting analysis for file:", file.name);
     setIsAnalyzing(true);
+    setError(null);
 
-    // TODO: Implement VLM API call
-    // For now, simulate API call with timeout
-    setTimeout(() => {
-      setAnalysis({
-        confidence: 89,
-        recommendations: [
-          {
-            treatment: "Botulinum Toxin Injection",
-            area: "Glabellar lines (frown lines)",
-            severity: "Mild to Moderate",
-            dosage: "20-25 units",
-            estimatedCost: "$400-500",
-          },
-          {
-            treatment: "Hyaluronic Acid Dermal Filler",
-            area: "Nasolabial folds",
-            severity: "Moderate",
-            volume: "0.8-1.2ml",
-            estimatedCost: "$650-850",
-          },
-          {
-            treatment: "Periorbital Botulinum Toxin",
-            area: "Lateral canthal lines (crow's feet)",
-            severity: "Mild",
-            dosage: "12-16 units per side",
-            estimatedCost: "$350-450",
-          },
-        ],
-      });
+    try {
+      // Validate the file first
+      console.log("📋 Validating file...");
+      validateImageFile(file);
+      console.log("✅ File validation passed");
+
+      // Check backend status first
+      if (backendStatus === "offline") {
+        console.log("🔄 Backend was offline, rechecking...");
+        await checkBackendStatus();
+      }
+
+      // Call the API
+      console.log("📡 Calling API...");
+      const result = await apiClient.analyzeImage(file);
+      console.log("✅ API call successful:", result);
+
+      // The result now includes totalCost from backend calculation
+      setAnalysis(result);
+      setBackendStatus("online");
+    } catch (err) {
+      console.error("❌ Analysis error:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to analyze image";
+      setError(errorMessage);
+
+      // If it's a connection error, mark backend as offline
+      if (
+        errorMessage.includes("Connection error") ||
+        errorMessage.includes("fetch")
+      ) {
+        setBackendStatus("offline");
+      }
+    } finally {
       setIsAnalyzing(false);
-    }, 3000);
+    }
   };
 
   const handleReset = () => {
     setAnalysis(null);
+    setError(null);
+  };
+
+  const handleRetryConnection = async () => {
+    setError(null);
+    await checkBackendStatus();
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <Header />
+
+        {/* Backend Status Indicator */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <div
+            className={`border rounded-md p-3 text-sm ${
+              backendStatus === "online"
+                ? "bg-green-50 border-green-200 text-green-800"
+                : backendStatus === "offline"
+                ? "bg-red-50 border-red-200 text-red-800"
+                : "bg-yellow-50 border-yellow-200 text-yellow-800"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div
+                  className={`w-2 h-2 rounded-full mr-2 ${
+                    backendStatus === "online"
+                      ? "bg-green-500"
+                      : backendStatus === "offline"
+                      ? "bg-red-500"
+                      : "bg-yellow-500"
+                  }`}
+                />
+                <span>
+                  Backend Status:{" "}
+                  {backendStatus === "online"
+                    ? "Connected"
+                    : backendStatus === "offline"
+                    ? "Disconnected"
+                    : "Checking..."}
+                </span>
+                <span className="ml-2 text-xs opacity-75">
+                  (http://localhost:8000)
+                </span>
+              </div>
+              {backendStatus === "offline" && (
+                <button
+                  onClick={handleRetryConnection}
+                  className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="max-w-7xl mx-auto mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Analysis Error
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                    {error.includes("Connection error") && (
+                      <div className="mt-2 text-xs">
+                        <p>Troubleshooting steps:</p>
+                        <ul className="list-disc list-inside ml-2">
+                          <li>
+                            Make sure backend is running:{" "}
+                            <code>
+                              cd backend && python -m uvicorn main:app --reload
+                            </code>
+                          </li>
+                          <li>
+                            Check if you can access:{" "}
+                            <a
+                              href="http://localhost:8000/health"
+                              target="_blank"
+                              className="underline"
+                            >
+                              http://localhost:8000/health
+                            </a>
+                          </li>
+                          <li>Restart your browser if the issue persists</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="max-w-7xl mx-auto">
@@ -75,7 +210,7 @@ export default function Home() {
               />
             </div>
 
-            {/* Results Section */}
+            {/* Analysis Results */}
             <div className="professional-card p-4 sm:p-6 lg:p-8">
               <div className="mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
@@ -85,107 +220,42 @@ export default function Home() {
                   AI-powered aesthetic recommendations
                 </p>
               </div>
+              {/* AnalysisResults now receives the full result including totalCost */}
               <AnalysisResults analysis={analysis} />
             </div>
           </div>
         </div>
 
-        {/* Call to Action Section */}
-        {analysis && (
-          <div className="max-w-4xl mx-auto mt-8 sm:mt-12">
-            <div className="professional-card p-4 sm:p-6 lg:p-8 text-center">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
-                Next Steps
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-2xl mx-auto">
-                Schedule a consultation with a board-certified aesthetic
-                professional to discuss these recommendations and develop a
-                personalized treatment plan.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                <button className="btn-primary">
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  Find Providers
-                </button>
-                <button className="btn-secondary">
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Download Report
-                </button>
+        {/* Debug Info */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="max-w-7xl mx-auto mt-8">
+            <details className="bg-gray-100 rounded p-4">
+              <summary className="cursor-pointer text-sm font-medium">
+                Debug Info
+              </summary>
+              <div className="mt-2 text-xs space-y-1">
+                <p>
+                  <strong>API URL:</strong>{" "}
+                  {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
+                </p>
+                <p>
+                  <strong>Backend Status:</strong> {backendStatus}
+                </p>
+                <p>
+                  <strong>Error:</strong> {error || "None"}
+                </p>
+                <p>
+                  <strong>Analysis:</strong> {analysis ? "Present" : "None"}
+                </p>
+                {analysis && (
+                  <p>
+                    <strong>Total Cost:</strong> {analysis.totalCost}
+                  </p>
+                )}
               </div>
-            </div>
+            </details>
           </div>
         )}
-
-        {/* Footer */}
-        <footer className="max-w-4xl mx-auto mt-12 sm:mt-16">
-          <div className="professional-card p-4 sm:p-6 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <h4 className="font-semibold text-gray-900">Aesthetic AI</h4>
-            </div>
-            <p className="text-xs sm:text-sm text-gray-600 mb-4">
-              AI-powered aesthetic analysis technology
-            </p>
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-gray-500">
-              <a href="#" className="hover:text-indigo-600 transition-colors">
-                Privacy
-              </a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">
-                Terms
-              </a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">
-                Support
-              </a>
-              <a href="#" className="hover:text-indigo-600 transition-colors">
-                About
-              </a>
-            </div>
-          </div>
-        </footer>
       </main>
     </div>
   );

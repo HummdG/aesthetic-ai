@@ -1,3 +1,4 @@
+// src/app/types/analysis.ts
 export interface TreatmentRecommendation {
   treatment: string;           // e.g., "Lip Enhancement Filler"
   area: string;               // e.g., "Lip volume and definition"
@@ -10,6 +11,7 @@ export interface TreatmentRecommendation {
 export interface AnalysisResult {
   confidence: number;                           // AI confidence percentage
   recommendations: TreatmentRecommendation[];   // Array of enhancement suggestions
+  totalCost: string;                           // ← Added dynamic total cost
 }
 
 export interface CameraState {

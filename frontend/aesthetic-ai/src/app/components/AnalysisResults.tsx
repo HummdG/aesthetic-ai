@@ -43,8 +43,8 @@ export default function AnalysisResults({ analysis }: AnalysisResultsProps) {
       {/* Treatment Recommendations */}
       <TreatmentRecommendations recommendations={analysis.recommendations} />
 
-      {/* Cost Summary */}
-      <CostSummary />
+      {/* Cost Summary - NOW USES DYNAMIC TOTAL COST */}
+      <CostSummary totalCost={analysis.totalCost} />
     </div>
   );
 }
@@ -60,12 +60,13 @@ function ConfidenceScore({ confidence }: { confidence: number }) {
           <p className="text-sm text-gray-600">AI prediction accuracy</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-indigo-600">
+          <div className="text-3xl font-bold text-indigo-600">
             {confidence}%
           </div>
           <div className="text-sm text-gray-500">Confidence</div>
         </div>
       </div>
+
       <div className="progress-bar">
         <div
           className="progress-fill"
@@ -81,49 +82,43 @@ function TreatmentRecommendations({
 }: {
   recommendations: TreatmentRecommendation[];
 }) {
-  const getSeverityBadge = (severity: string) => {
-    const normalized = severity.toLowerCase();
-    if (normalized.includes("mild")) {
-      return "badge badge-mild";
-    } else if (normalized.includes("moderate")) {
-      return "badge badge-moderate";
-    }
-    return "badge badge-high";
-  };
-
   return (
-    <div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="space-y-4">
+      <h4 className="text-lg font-semibold text-gray-900 mb-4">
         Treatment Recommendations
-      </h3>
+      </h4>
 
       <div className="space-y-4">
-        {recommendations.map((rec: TreatmentRecommendation, index: number) => (
-          <div
-            key={index}
-            className="result-card fade-in"
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
+        {recommendations.map((rec, index) => (
+          <div key={index} className="professional-card p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h4 className="font-semibold text-gray-900 text-base">
+                <h5 className="text-lg font-semibold text-gray-900">
                   {rec.treatment}
-                </h4>
-                <p className="text-gray-600 text-sm mt-1">{rec.area}</p>
+                </h5>
+                <p className="text-gray-600 mb-2">{rec.area}</p>
               </div>
-              <span className={getSeverityBadge(rec.severity)}>
+              <span
+                className={`badge ${
+                  rec.severity.toLowerCase() === "mild"
+                    ? "badge-mild"
+                    : rec.severity.toLowerCase() === "moderate"
+                    ? "badge-moderate"
+                    : "badge-high"
+                }`}
+              >
                 {rec.severity}
               </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              {rec.dosage && (
+              {rec.dosage && rec.dosage !== "N/A" && (
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-gray-500 mb-1">Recommended Dosage</div>
                   <div className="font-medium text-gray-900">{rec.dosage}</div>
                 </div>
               )}
-              {rec.volume && (
+              {rec.volume && rec.volume !== "N/A" && (
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-gray-500 mb-1">Volume Required</div>
                   <div className="font-medium text-gray-900">{rec.volume}</div>
@@ -143,7 +138,8 @@ function TreatmentRecommendations({
   );
 }
 
-function CostSummary() {
+// FIXED: Now accepts totalCost as prop instead of hardcoded value
+function CostSummary({ totalCost }: { totalCost: string }) {
   return (
     <div className="professional-card p-6 bg-indigo-50 border-indigo-200">
       <div className="flex justify-between items-center mb-4">
@@ -155,7 +151,7 @@ function CostSummary() {
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-indigo-600">
-            $1,300 - $1,700
+            {totalCost} {/* ← NOW DYNAMIC! */}
           </div>
           <div className="text-sm text-gray-500">Estimated range</div>
         </div>

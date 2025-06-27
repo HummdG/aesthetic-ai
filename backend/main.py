@@ -1,11 +1,10 @@
-
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import base64
-import io
-from langchain import LLMChain, PromptTemplate
-from langchain.chat_models import ChatOpenAI
+import os
+from langchain_core.messages import HumanMessage
+from langchain_openai import ChatOpenAI
 
 app = FastAPI(
     title="Aesthetic AI Backend",
@@ -25,20 +24,12 @@ app.add_middleware(
 class AnalysisResponse(BaseModel):
     analysis: str
 
-# Prepare LangChain prompt template
-template = (
-    "You are a professional aesthetic clinician. "
-    "Analyze the following base64-encoded image of a face. "
-    "Identify visible imperfections (e.g., fine lines, volume loss, asymmetry) "
-    "and recommend appropriate filler or Botox treatments with brief justification. "
-    "Respond in structured bullet points.\n"
-    "Image (base64): {image_data}"
+# Initialize the ChatOpenAI model for vision
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0.2,
+    openai_api_key=os.getenv("OPENAI_API_KEY")
 )
-prompt = PromptTemplate(input_variables=["image_data"], template=template)
-
-# Initialize the ChatOpenAI model
-llm = ChatOpenAI(model_name="o4-mini", temperature=0.2)
-chain = LLMChain(llm=llm, prompt=prompt)
 
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_image(file: UploadFile = File(...)):
@@ -50,10 +41,41 @@ async def analyze_image(file: UploadFile = File(...)):
     contents = await file.read()
     base64_str = base64.b64encode(contents).decode("utf-8")
 
-    # Run LLMChain
-    analysis = chain.run(image_data=base64_str)
+    # Create the prompt text
+    prompt_text = (
+        "You are a professional aesthetic clinician. "
+        "Analyze the following image of a face. "
+        "Identify visible imperfections (e.g., fine lines, volume loss, asymmetry) "
+        "and recommend appropriate filler or Botox treatments with brief justification. "
+        "Respond in structured bullet points."
+    )
 
-    return AnalysisResponse(analysis=analysis)
+    try:
+        # Create multimodal message for LangChain
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": prompt_text},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_str}"
+                    }
+                }
+            ]
+        )
+        
+        # Use LangChain to invoke the model
+        response = await llm.ainvoke([message])
+        analysis = response.content
+        
+        return AnalysisResponse(analysis=analysis)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"LangChain error: {str(e)}")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "langchain": "enabled"}
 
 if __name__ == "__main__":
     import uvicorn

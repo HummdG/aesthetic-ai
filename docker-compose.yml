@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     build:
@@ -8,5 +10,53 @@ services:
       - "8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development
     volumes:
+      # Mount source code for development hot-reload
       - ./backend:/app
+      # Exclude node_modules and __pycache__ for performance
+      - /app/__pycache__
+      - /app/.pytest_cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - aesthetic_network
+
+  # Optional: Add Redis for caching (future enhancement)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: aesthetic_redis
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aesthetic_network
+
+  # Optional: Add database (future enhancement)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: aesthetic_postgres
+  #   environment:
+  #     POSTGRES_DB: aesthetic_db
+  #     POSTGRES_USER: aesthetic_user
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-defaultpassword}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aesthetic_network
+
+networks:
+  aesthetic_network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:

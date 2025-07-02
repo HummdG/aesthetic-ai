@@ -1,23 +1,26 @@
+# ===== FILE 1: backend/app/models/schemas.py =====
 """
-Pydantic models for request/response schemas
+Pydantic models for skin condition analysis request/response schemas
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-class TreatmentRecommendation(BaseModel):
-    """Model for individual treatment recommendation"""
-    treatment: str = Field(..., description="Name of the recommended treatment")
-    area: str = Field(..., description="Facial area to be treated")
-    severity: str = Field(..., description="Severity level: Mild, Moderate, or Significant")
-    dosage: Optional[str] = Field(None, description="Recommended dosage if applicable")
-    volume: Optional[str] = Field(None, description="Recommended volume if applicable")
-    estimatedCost: str = Field(..., description="Estimated cost range in GBP")
+class IngredientRecommendation(BaseModel):
+    """Model for individual ingredient recommendation"""
+    ingredient: str = Field(..., description="Name of the recommended skincare ingredient")
+    purpose: str = Field(..., description="What this ingredient does for the skin condition")
+    concentration: Optional[str] = Field(None, description="Recommended concentration range")
+    application: str = Field(..., description="How to apply this ingredient")
+    benefits: str = Field(..., description="Key benefits for the detected skin condition")
 
-class AnalysisResponse(BaseModel):
-    """Model for complete analysis response"""
+class SkinAnalysisResponse(BaseModel):
+    """Model for skin condition analysis response"""
     confidence: int = Field(..., ge=1, le=100, description="Confidence percentage (1-100)")
-    recommendations: List[TreatmentRecommendation] = Field(..., description="List of treatment recommendations")
-    totalCost: str = Field(..., description="Total estimated cost range in GBP")
+    primaryCondition: str = Field(..., description="Primary detected skin condition")
+    secondaryConditions: List[str] = Field(default=[], description="Additional skin concerns detected")
+    skinType: str = Field(..., description="Overall skin type classification")
+    ingredientRecommendations: List[IngredientRecommendation] = Field(..., description="List of ingredient recommendations")
+    description: str = Field(..., description="Detailed description of the skin analysis")
 
 class HealthCheckResponse(BaseModel):
     """Model for health check response"""
@@ -32,3 +35,8 @@ class ErrorResponse(BaseModel):
     """Model for error responses"""
     detail: str = Field(..., description="Error message")
     error_code: Optional[str] = Field(None, description="Optional error code")
+
+
+
+
+

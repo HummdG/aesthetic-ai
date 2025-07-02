@@ -1,158 +1,129 @@
+# ===== FILE 3: backend/app/utils/parsing.py =====
 """
-Response parsing utilities for LLM output
+Parsing utilities for skin analysis LLM responses
 """
 import json
 import re
-import random
 import logging
-from typing import Any, Union
-from fastapi import HTTPException
+from typing import Dict, Any
 
-from app.models.schemas import AnalysisResponse, TreatmentRecommendation
-from app.utils.pricing import calculate_total_cost
-from app.config import settings
+from fastapi import HTTPException
+from app.models.schemas import SkinAnalysisResponse, IngredientRecommendation
 
 logger = logging.getLogger(__name__)
 
-def clean_confidence_value(confidence_value: Any) -> int:
+def parse_skin_analysis_response(llm_response: str) -> SkinAnalysisResponse:
     """
-    Clean and convert confidence value to integer, handling N/A cases
+    Parse LLM response text into SkinAnalysisResponse object
     
     Args:
-        confidence_value: Raw confidence value from LLM
+        llm_response: Raw text response from LLM
         
     Returns:
-        Cleaned confidence value as integer
-    """
-    if isinstance(confidence_value, int):
-        return max(settings.MIN_CONFIDENCE, min(settings.MAX_CONFIDENCE, confidence_value))
-    
-    if isinstance(confidence_value, str):
-        # Handle N/A, null, none cases
-        if confidence_value.upper() in ['N/A', 'NULL', 'NONE', 'UNKNOWN']:
-            return random.randint(*settings.DEFAULT_CONFIDENCE_RANGE)
-        
-        # Try to extract number from string
-        numbers = re.findall(r'\d+', confidence_value)
-        if numbers:
-            conf = int(numbers[0])
-            return max(settings.MIN_CONFIDENCE, min(settings.MAX_CONFIDENCE, conf))
-    
-    # Fallback to random reasonable confidence
-    return random.randint(*settings.DEFAULT_CONFIDENCE_RANGE)
-
-def clean_recommendation_data(rec_data: dict) -> dict:
-    """
-    Clean recommendation data, handling N/A values
-    
-    Args:
-        rec_data: Raw recommendation dictionary
-        
-    Returns:
-        Cleaned recommendation dictionary
-    """
-    cleaned = rec_data.copy()
-    
-    # Clean N/A values for optional fields
-    for field in ['dosage', 'volume']:
-        if cleaned.get(field) in ['N/A', 'n/a', None, '']:
-            cleaned[field] = None
-    
-    return cleaned
-
-def extract_json_from_text(text: str) -> Union[dict, None]:
-    """
-    Extract JSON object from text that may contain other content
-    
-    Args:
-        text: Text containing JSON
-        
-    Returns:
-        Parsed JSON object or None if not found
-    """
-    try:
-        # Try to find JSON object in the text
-        json_match = re.search(r'\{.*\}', text, re.DOTALL)
-        if json_match:
-            json_str = json_match.group()
-            return json.loads(json_str)
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON decode error: {e}")
-    except Exception as e:
-        logger.error(f"Error extracting JSON: {e}")
-    
-    return None
-
-def parse_llm_response(llm_response: str) -> AnalysisResponse:
-    """
-    Parse the LLM response and extract structured data with robust error handling
-    
-    Args:
-        llm_response: Raw response from LLM
-        
-    Returns:
-        Structured AnalysisResponse object
+        SkinAnalysisResponse object with parsed data
         
     Raises:
-        HTTPException: If parsing fails or LLM refuses
+        HTTPException: If parsing fails or response is invalid
     """
-    logger.info(f"🔍 Parsing LLM response (length: {len(llm_response)})")
-    
     try:
-        # Extract JSON from the response
-        parsed_data = extract_json_from_text(llm_response)
+        logger.info("🔍 Parsing skin analysis response...")
         
-        if not parsed_data:
-            raise ValueError("No valid JSON found in response")
+        # Clean the response text
+        cleaned_response = clean_llm_response(llm_response)
         
-        logger.info(f"📋 Extracted JSON with keys: {list(parsed_data.keys())}")
+        # Parse JSON
+        try:
+            response_data = json.loads(cleaned_response)
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ JSON parsing failed: {e}")
+            logger.error(f"Response text: {cleaned_response[:500]}...")
+            raise HTTPException(
+                status_code=422,
+                detail="Invalid response format from analysis service"
+            )
         
-        # Clean and validate confidence
-        raw_confidence = parsed_data.get('confidence', 'N/A')
-        cleaned_confidence = clean_confidence_value(raw_confidence)
-        logger.info(f"🔧 Cleaned confidence: {raw_confidence} -> {cleaned_confidence}")
+        # Validate required fields
+        if not validate_skin_analysis_response(response_data):
+            raise HTTPException(
+                status_code=422,
+                detail="Incomplete analysis response - missing required fields"
+            )
         
-        # Create TreatmentRecommendation objects with validation
-        recommendations = []
-        for rec_data in parsed_data.get('recommendations', []):
-            cleaned_rec = clean_recommendation_data(rec_data)
-            recommendations.append(TreatmentRecommendation(**cleaned_rec))
+        # Parse ingredient recommendations
+        ingredient_recommendations = []
+        for ingredient_data in response_data.get('ingredientRecommendations', []):
+            try:
+                ingredient = IngredientRecommendation(**ingredient_data)
+                ingredient_recommendations.append(ingredient)
+            except Exception as e:
+                logger.warning(f"⚠️ Skipping invalid ingredient recommendation: {e}")
+                continue
         
-        # Calculate dynamic total cost
-        total_cost = calculate_total_cost(recommendations)
-        
-        response = AnalysisResponse(
-            confidence=cleaned_confidence,
-            recommendations=recommendations,
-            totalCost=total_cost
+        # Create response object
+        analysis_response = SkinAnalysisResponse(
+            confidence=response_data['confidence'],
+            primaryCondition=response_data['primaryCondition'],
+            secondaryConditions=response_data.get('secondaryConditions', []),
+            skinType=response_data['skinType'],
+            ingredientRecommendations=ingredient_recommendations,
+            description=response_data.get('description', 'Skin analysis completed successfully.')
         )
         
-        logger.info(f"✅ Successfully parsed - Confidence: {response.confidence}%, "
-                   f"Total: {total_cost}, Recommendations: {len(recommendations)}")
-        return response
+        logger.info(f"✅ Successfully parsed skin analysis response - "
+                   f"Condition: {analysis_response.primaryCondition}, "
+                   f"Ingredients: {len(ingredient_recommendations)}")
         
+        return analysis_response
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
     except Exception as e:
-        logger.error(f"❌ Failed to parse LLM response: {e}")
-        logger.error(f"Raw response was: {llm_response[:500]}...")  # Log first 500 chars
+        logger.error(f"❌ Failed to parse skin analysis response: {str(e)}")
         
-        # Check if it's a refusal
-        refusal_keywords = ['sorry', "can't", 'unable', 'cannot', 'refuse', 'not allowed']
-        if any(word in llm_response.lower() for word in refusal_keywords):
-            logger.warning("🚫 LLM refused the request")
+        # Check for specific error types
+        if "refused" in str(e).lower() or "cannot" in str(e).lower():
             raise HTTPException(
-                status_code=422, 
-                detail="LLM refused to analyze the image. Try a different image or approach."
+                status_code=422,
+                detail="Unable to analyze this image. Please try a different image with better lighting and clarity."
             )
         
         # Generic parsing failure
         raise HTTPException(
             status_code=500, 
-            detail=f"Failed to parse LLM response: {str(e)}"
+            detail=f"Failed to parse analysis response: {str(e)}"
         )
 
-def validate_analysis_response(response_data: dict) -> bool:
+def clean_llm_response(response: str) -> str:
     """
-    Validate that response data has required fields
+    Clean LLM response text to extract JSON content
+    
+    Args:
+        response: Raw response text from LLM
+        
+    Returns:
+        Cleaned JSON string
+    """
+    # Remove markdown code blocks
+    response = re.sub(r'```json\s*', '', response)
+    response = re.sub(r'```\s*$', '', response)
+    response = re.sub(r'^```\s*', '', response)
+    
+    # Remove any leading/trailing whitespace
+    response = response.strip()
+    
+    # Try to find JSON object boundaries
+    start_idx = response.find('{')
+    end_idx = response.rfind('}')
+    
+    if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+        response = response[start_idx:end_idx + 1]
+    
+    return response
+
+def validate_skin_analysis_response(response_data: dict) -> bool:
+    """
+    Validate that response data has required fields for skin analysis
     
     Args:
         response_data: Dictionary containing response data
@@ -160,12 +131,22 @@ def validate_analysis_response(response_data: dict) -> bool:
     Returns:
         True if valid, False otherwise
     """
-    required_fields = ['confidence', 'recommendations']
+    required_fields = ['confidence', 'primaryCondition', 'skinType', 'ingredientRecommendations']
     
     if not all(field in response_data for field in required_fields):
+        logger.error(f"❌ Missing required fields. Found: {list(response_data.keys())}")
         return False
     
-    if not isinstance(response_data['recommendations'], list):
+    if not isinstance(response_data['ingredientRecommendations'], list):
+        logger.error("❌ ingredientRecommendations must be a list")
+        return False
+    
+    if not isinstance(response_data['confidence'], int):
+        logger.error("❌ confidence must be an integer")
+        return False
+    
+    if not (1 <= response_data['confidence'] <= 100):
+        logger.error("❌ confidence must be between 1 and 100")
         return False
     
     return True

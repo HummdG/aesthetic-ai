@@ -1,17 +1,18 @@
+# ===== FILE 2: backend/app/models/__init__.py =====
 """
 Pydantic models and schemas
 """
 
 from .schemas import (
-    TreatmentRecommendation,
-    AnalysisResponse,
+    IngredientRecommendation,
+    SkinAnalysisResponse,
     HealthCheckResponse,
     ErrorResponse
 )
 
 __all__ = [
-    "TreatmentRecommendation",
-    "AnalysisResponse", 
+    "IngredientRecommendation",
+    "SkinAnalysisResponse", 
     "HealthCheckResponse",
     "ErrorResponse"
 ]

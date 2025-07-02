@@ -1,5 +1,5 @@
 """
-Analysis service for orchestrating image analysis workflow
+Analysis service for orchestrating skin condition analysis workflow
 """
 import base64
 import random
@@ -7,15 +7,15 @@ import logging
 from typing import BinaryIO
 from fastapi import HTTPException, UploadFile
 
-from app.models.schemas import AnalysisResponse
+from app.models.schemas import SkinAnalysisResponse
 from app.services.llm_service import llm_service
-from app.utils.parsing import parse_llm_response
+from app.utils.parsing import parse_skin_analysis_response
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 class AnalysisService:
-    """Service for managing the complete analysis workflow"""
+    """Service for managing the complete skin analysis workflow"""
     
     def __init__(self):
         self.llm_service = llm_service
@@ -81,22 +81,22 @@ class AnalysisService:
                 detail=f"Failed to process image: {str(e)}"
             )
     
-    async def analyze_image(self, file: UploadFile) -> AnalysisResponse:
+    async def analyze_skin_image(self, file: UploadFile) -> SkinAnalysisResponse:
         """
-        Perform complete image analysis workflow
+        Perform complete skin condition analysis workflow
         
         Args:
             file: FastAPI UploadFile object
             
         Returns:
-            AnalysisResponse with recommendations
+            SkinAnalysisResponse with skin condition and ingredient recommendations
             
         Raises:
             HTTPException: If analysis fails
         """
         analysis_id = random.randint(1000, 9999)
         
-        logger.info(f"📸 Starting analysis {analysis_id} - File: {file.filename}, "
+        logger.info(f"🔬 Starting skin analysis {analysis_id} - File: {file.filename}, "
                    f"Size: {file.size}, Type: {file.content_type}")
         
         # Validate file
@@ -106,7 +106,7 @@ class AnalysisService:
         if not self.llm_service.is_available:
             raise HTTPException(
                 status_code=503, 
-                detail="Analysis service is currently unavailable. Please try again later."
+                detail="Skin analysis service is currently unavailable. Please try again later."
             )
         
         try:
@@ -114,43 +114,54 @@ class AnalysisService:
             base64_image = await self.encode_image_to_base64(file)
             
             # Get LLM analysis
-            llm_response = await self.llm_service.analyze_image(base64_image, analysis_id)
+            llm_response = await self.llm_service.analyze_skin_image(base64_image, analysis_id)
             
-            # Parse response into structured data
-            structured_response = parse_llm_response(llm_response)
+            # Parse response
+            analysis_response = parse_skin_analysis_response(llm_response)
             
-            logger.info(f"✅ Analysis {analysis_id} complete - Confidence: {structured_response.confidence}%, "
-                       f"Total cost: {structured_response.totalCost}, "
-                       f"Recommendations: {len(structured_response.recommendations)}")
+            logger.info(f"✅ Skin analysis {analysis_id} completed successfully - "
+                       f"Primary condition: {analysis_response.primaryCondition}, "
+                       f"Confidence: {analysis_response.confidence}%, "
+                       f"Ingredients: {len(analysis_response.ingredientRecommendations)}")
             
-            return structured_response
+            return analysis_response
             
         except HTTPException:
-            # Re-raise HTTP exceptions (like LLM refusals or validation errors)
+            # Re-raise HTTP exceptions (these are already handled)
             raise
         except Exception as e:
-            logger.error(f"❌ Analysis {analysis_id} failed: {str(e)}")
+            logger.error(f"❌ Skin analysis {analysis_id} failed: {str(e)}")
             raise HTTPException(
-                status_code=500, 
+                status_code=500,
                 detail=f"Analysis failed: {str(e)}"
             )
     
     def get_service_status(self) -> dict:
         """
-        Get analysis service status
+        Get comprehensive service status
         
         Returns:
-            Dictionary with service status information
+            Dictionary containing service status information
         """
         llm_status = self.llm_service.get_status()
         
         return {
             "analysis_service": "available",
             "llm_service": llm_status,
+            "supported_formats": settings.ALLOWED_CONTENT_TYPES,
             "max_file_size_mb": settings.MAX_FILE_SIZE / (1024 * 1024),
-            "allowed_formats": settings.ALLOWED_CONTENT_TYPES,
-            "currency": settings.CURRENCY
+            "skin_conditions": [
+                "Normal skin",
+                "Oily skin", 
+                "Dry skin",
+                "Combination skin",
+                "Sensitive skin",
+                "Acne-prone skin",
+                "Hyperpigmentation",
+                "Rosacea",
+                "Eczema"
+            ]
         }
 
-# Global analysis service instance
+# Global service instance
 analysis_service = AnalysisService()

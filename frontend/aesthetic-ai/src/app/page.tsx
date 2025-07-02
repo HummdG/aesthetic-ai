@@ -3,206 +3,206 @@
 import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import UploadSection from "./components/UploadSection";
-import AnalysisResults from "./components/AnalysisResults";
-import { AnalysisResult } from "./types/analysis";
-import { apiClient, validateImageFile } from "./utils/api";
+import SkinAnalysisResults from "./components/SkinAnalysisResults";
+import { SkinAnalysisResult } from "./types/skinAnalysis";
 
-export default function Home() {
+export default function HomePage() {
+  const [analysis, setAnalysis] = useState<SkinAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [backendStatus, setBackendStatus] = useState<
-    "checking" | "online" | "offline"
-  >("checking");
 
-  // Check backend status on load
-  useEffect(() => {
-    checkBackendStatus();
-  }, []);
-
-  const checkBackendStatus = async () => {
-    try {
-      await apiClient.healthCheck();
-      setBackendStatus("online");
-      console.log("✅ Backend is online");
-    } catch (error) {
-      setBackendStatus("offline");
-      console.log("❌ Backend is offline:", error);
-    }
-  };
-
+  // Handle analysis start
   const handleAnalysisStart = async (file: File) => {
-    console.log("🎯 Starting analysis for file:", file.name);
     setIsAnalyzing(true);
     setError(null);
+    setAnalysis(null);
 
     try {
-      // Validate the file first
-      console.log("📋 Validating file...");
-      validateImageFile(file);
-      console.log("✅ File validation passed");
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // Check backend status first
-      if (backendStatus === "offline") {
-        console.log("🔄 Backend was offline, rechecking...");
-        await checkBackendStatus();
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${apiUrl}/analyze/skin`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail || `HTTP ${response.status}: Analysis failed`
+        );
       }
 
-      // Call the API
-      console.log("📡 Calling API...");
-      const result = await apiClient.analyzeImage(file);
-      console.log("✅ API call successful:", result);
-
-      // The result now includes totalCost from backend calculation
+      const result = await response.json();
       setAnalysis(result);
-      setBackendStatus("online");
     } catch (err) {
-      console.error("❌ Analysis error:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to analyze image";
-      setError(errorMessage);
-
-      // If it's a connection error, mark backend as offline
-      if (
-        errorMessage.includes("Connection error") ||
-        errorMessage.includes("fetch")
-      ) {
-        setBackendStatus("offline");
-      }
+      console.error("Analysis failed:", err);
+      setError(err instanceof Error ? err.message : "Analysis failed");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
+  // Handle reset
   const handleReset = () => {
     setAnalysis(null);
     setError(null);
   };
 
-  const handleRetryConnection = async () => {
-    setError(null);
-    await checkBackendStatus();
-  };
-
   return (
-    <div className="min-h-screen bg-nude-50">
-      <main className="container mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-nude-50 to-nude-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
         <Header />
 
-        {/* Backend Status Indicator */}
-        {/*<div className="max-w-7xl mx-auto mb-6">
-          <div
-            className={`border rounded-lg p-3 text-sm font-body ${
-              backendStatus === "online"
-                ? "bg-green-50 border-green-200 text-green-800"
-                : backendStatus === "offline"
-                ? "bg-red-50 border-red-200 text-red-800"
-                : "bg-nude-100 border-nude-200 text-brown-700"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div
-                  className={`w-2 h-2 rounded-full mr-2 ${
-                    backendStatus === "online"
-                      ? "bg-green-500"
-                      : backendStatus === "offline"
-                      ? "bg-red-500"
-                      : "bg-nude-400"
-                  }`}
-                ></div>
-                <span>
-                  Backend:{" "}
-                  {backendStatus === "online"
-                    ? "Connected"
-                    : backendStatus === "offline"
-                    ? "Disconnected"
-                    : "Checking..."}
-                </span>
-              </div>
-              {backendStatus === "offline" && (
-                <button
-                  onClick={handleRetryConnection}
-                  className="text-red-700 hover:text-red-900 font-medium text-sm"
-                >
-                  Retry
-                </button>
-              )}
+        {/* Main Content - Single Column Layout */}
+        <div className="max-w-6xl mx-auto space-y-8">
+          {/* Full Width Upload Section */}
+          <div className="bg-white rounded-xl border border-nude-200 p-8 shadow-sm">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-serif font-semibold text-brown-900 mb-2">
+                Skin Condition Analysis
+              </h2>
+              <p className="text-brown-700 font-body">
+                Upload a clear facial image for AI-powered skin analysis and
+                personalized ingredient recommendations
+              </p>
             </div>
+
+            {/* Full Width Upload Component */}
+            <UploadSection
+              onAnalysisStart={handleAnalysisStart}
+              isAnalyzing={isAnalyzing}
+              onReset={handleReset}
+            />
+
+            {/* Error Display */}
             {error && (
-              <div className="mt-2 text-xs text-red-700">
-                <p className="font-medium">Error: {error}</p>
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">
+                      Analysis Error
+                    </h3>
+                    <p className="mt-1 text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-        </div> */}
 
-        {/* Main Content Grid */}
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Upload Section */}
-            <div className="bg-white rounded-xl border border-nude-200 p-6 shadow-sm">
+          {/* Skin Analysis Results - Only shown when analysis is available */}
+          {(analysis || isAnalyzing) && (
+            <div className="bg-white rounded-xl border border-nude-200 p-8 shadow-sm">
               <div className="mb-6">
-                <h2 className="text-xl font-serif font-semibold text-brown-900 mb-2">
-                  Image Analysis
+                <h2 className="text-2xl font-serif font-semibold text-brown-900 mb-2">
+                  Skin Analysis Results
                 </h2>
                 <p className="text-brown-700 font-body">
-                  Upload a clear facial image for AI aesthetic analysis
+                  Personalized skin condition assessment and ingredient
+                  recommendations
                 </p>
               </div>
-              <UploadSection
-                onAnalysisStart={handleAnalysisStart}
+
+              <SkinAnalysisResults
+                analysis={analysis}
                 isAnalyzing={isAnalyzing}
-                onReset={handleReset}
               />
             </div>
+          )}
 
-            {/* Analysis Results */}
-            <div className="bg-white rounded-xl border border-nude-200 p-6 shadow-sm">
-              <div className="mb-6">
-                <h2 className="text-xl font-serif font-semibold text-brown-900 mb-2">
-                  Analysis Results
-                </h2>
-                <p className="text-brown-700 font-body">
-                  AI-powered aesthetic recommendations
-                </p>
+          {/* Information Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div className="bg-white rounded-xl border border-nude-200 p-6 text-center">
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
               </div>
-              <AnalysisResults analysis={analysis} />
+              <h3 className="font-serif font-semibold text-brown-900 mb-2">
+                Accurate Analysis
+              </h3>
+              <p className="text-brown-600 text-sm">
+                Advanced AI analyzes your skin for precise condition
+                identification
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-nude-200 p-6 text-center">
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <h3 className="font-serif font-semibold text-brown-900 mb-2">
+                Instant Results
+              </h3>
+              <p className="text-brown-600 text-sm">
+                Get immediate skin analysis and ingredient recommendations
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-nude-200 p-6 text-center">
+              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+              </div>
+              <h3 className="font-serif font-semibold text-brown-900 mb-2">
+                Privacy Focused
+              </h3>
+              <p className="text-brown-600 text-sm">
+                Your images are processed securely and not stored
+              </p>
             </div>
           </div>
         </div>
-
-        {/* Debug Info */}
-        {/* {process.env.NODE_ENV === "development" && (
-          <div className="max-w-7xl mx-auto mt-8">
-            <details className="bg-white border border-nude-200 rounded-lg p-4">
-              <summary className="cursor-pointer text-sm font-serif font-medium text-brown-900">
-                Debug Information
-              </summary>
-              <div className="mt-3 text-xs font-body space-y-1 text-brown-700">
-                <p>
-                  <strong>API URL:</strong>{" "}
-                  {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}
-                </p>
-                <p>
-                  <strong>Backend Status:</strong> {backendStatus}
-                </p>
-                <p>
-                  <strong>Error:</strong> {error || "None"}
-                </p>
-                <p>
-                  <strong>Analysis:</strong> {analysis ? "Present" : "None"}
-                </p>
-                {analysis && (
-                  <p>
-                    <strong>Total Cost:</strong> {analysis.totalCost}
-                  </p>
-                )}
-              </div>
-            </details>
-          </div>
-        )} */}
-      </main>
+      </div>
     </div>
   );
 }

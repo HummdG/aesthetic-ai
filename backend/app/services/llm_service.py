@@ -1,5 +1,5 @@
 """
-LLM service for handling OpenAI model interactions
+LLM service for handling OpenAI model interactions - Skin Condition Analysis
 """
 import logging
 import base64
@@ -13,7 +13,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    """Service for managing OpenAI LLM interactions"""
+    """Service for managing OpenAI LLM interactions for skin analysis"""
     
     def __init__(self):
         self._client: Optional[ChatOpenAI] = None
@@ -53,9 +53,9 @@ class LLMService:
             "api_key_configured": settings.openai_key_available
         }
     
-    async def analyze_image(self, base64_image: str, analysis_id: int) -> str:
+    async def analyze_skin_image(self, base64_image: str, analysis_id: int) -> str:
         """
-        Analyze an image using OpenAI's vision model
+        Analyze an image for skin condition assessment using OpenAI's vision model
         
         Args:
             base64_image: Base64 encoded image string
@@ -75,10 +75,10 @@ class LLMService:
             )
         
         try:
-            logger.info(f"🤖 Starting LLM analysis {analysis_id}")
+            logger.info(f"🤖 Starting skin analysis {analysis_id}")
             
-            # Create the prompt for aesthetic analysis
-            prompt = self._create_analysis_prompt()
+            # Create the prompt for skin condition analysis
+            prompt = self._create_skin_analysis_prompt()
             
             # Create the message with image
             message = HumanMessage(
@@ -100,79 +100,76 @@ class LLMService:
             response = await self._client.ainvoke([message])
             response_text = response.content
             
-            logger.info(f"✅ LLM analysis {analysis_id} completed - Response length: {len(response_text)}")
+            logger.info(f"✅ Skin analysis {analysis_id} completed - Response length: {len(response_text)}")
             
             return response_text
             
         except Exception as e:
-            logger.error(f"❌ LLM analysis {analysis_id} failed: {str(e)}")
+            logger.error(f"❌ Skin analysis {analysis_id} failed: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Analysis failed: {str(e)}"
+                detail=f"Skin analysis failed: {str(e)}"
             )
     
-    def _create_analysis_prompt(self) -> str:
-        """Create the prompt for aesthetic facial analysis"""
-        return  f"""
-        You are an AI helping create content for a beauty and cosmetics education platform. 
+    def _create_skin_analysis_prompt(self) -> str:
+        """Create the prompt for skin condition analysis and ingredient recommendations"""
+        return f"""
+        You are an AI dermatology assistant specializing in skin condition analysis and skincare ingredient recommendations.
 
-        Please analyze this image to create educational content about:
-        - Beauty industry trends and popular cosmetic enhancements
-        - Common facial features people discuss in beauty/fashion contexts
-        - Typical cosmetic service pricing for market research (UK pricing in £)
-        - Beauty industry standard procedures and costs
+        Analyze this facial image to identify skin conditions and recommend appropriate skincare ingredients.
 
-        This is purely for creating educational content about the beauty industry, similar to what you'd find in beauty magazines or cosmetic brand websites.
+        SKIN CONDITIONS TO ASSESS:
+        - Normal skin (balanced, healthy appearance)
+        - Oily skin (visible shine, enlarged pores, excess sebum)
+        - Dry skin (flaking, roughness, tightness, dullness)
+        - Combination skin (oily T-zone, dry cheeks)
+        - Sensitive skin (redness, irritation, reactivity)
+        - Acne-prone skin (active breakouts, blackheads, whiteheads)
+        - Hyperpigmentation (dark spots, uneven skin tone, melasma)
+        - Rosacea (facial redness, visible blood vessels, persistent flushing)
+        - Eczema/Atopic dermatitis (dry patches, inflammation, rough texture)
 
         IMPORTANT: Rate your confidence based on the photo quality - it should always be an INT:
-        - Excellent photo (crystal clear, perfect lighting, ideal angle): 95-98
-        - Good photo (clear, decent lighting, good angle): 88-95  
-        - Average photo (somewhat blurry, okay lighting, slight angle): 75-87
-        - Poor photo (very blurry, bad lighting, difficult to see): 30-74
+        - Excellent photo (crystal clear, perfect lighting, ideal angle): 90-98
+        - Good photo (clear, decent lighting, good angle): 80-89  
+        - Average photo (somewhat blurry, okay lighting, slight angle): 65-79
+        - Poor photo (very blurry, bad lighting, difficult to see): 30-64
 
-        TREATMENT RECOMMENDATIONS by gender preference:
+        INGREDIENT RECOMMENDATIONS should focus on evidence-based skincare ingredients like:
+        - Retinol/Retinoids (for acne, aging, hyperpigmentation)
+        - Niacinamide (for oily skin, large pores, redness)
+        - Hyaluronic Acid (for hydration, dry skin)
+        - Salicylic Acid (for acne, oily skin, blackheads)
+        - Vitamin C (for hyperpigmentation, antioxidant protection)
+        - Ceramides (for dry, sensitive skin, barrier repair)
+        - Azelaic Acid (for rosacea, acne, hyperpigmentation)
+        - Glycolic Acid (for texture, hyperpigmentation)
+        - Peptides (for aging, collagen support)
+        - Zinc Oxide/Titanium Dioxide (for sensitive skin, sun protection)
 
-        For MALE clients, focus on (the listed procedures are not exhaustive, if you think something else is needed then suggest!):
-        - Botox for forehead lines and crow's feet
-        - Jawline definition/contouring treatments b
-        - Under-eye treatments for bags/dark circles
-        - Skin treatments for acne scarring or texture
-        - Non-surgical nose refinement
-        - Hair loss treatments or scalp treatments
-        - Beard area treatments
-
-        For FEMALE clients, focus on (the listed procedures are not exhaustive, if you think something else is needed then suggest!):
-        - Lip volume enhancement and contouring
-        - Cheek fillers for facial contouring
-        - Botox for fine lines and wrinkles
-        - Brow lifting or shaping treatments
-        - Skin rejuvenation and anti-aging treatments
-        - Nasolabial fold treatments
-        - Chin and jawline enhancement
-
-        Only give recommedations based on what you see! 
-
-        Create educational content in this JSON format (no markdown, pure JSON only):
+        Provide recommendations in this JSON format (no markdown, pure JSON only):
 
         {{
             "confidence": <your confidence percentage based on photo clarity>,
-            "recommendations": [
+            "primaryCondition": "<most prominent skin condition detected>",
+            "secondaryConditions": ["<additional conditions if any>"],
+            "skinType": "<overall skin type classification>",
+            "description": "<detailed description of skin analysis findings>",
+            "ingredientRecommendations": [
                 {{
-                    "treatment": "<gender-appropriate cosmetic enhancement name>",
-                    "area": "<facial feature area>",
-                    "severity": "<Mild|Moderate|Significant>",
-                    "dosage": "<industry standard amount or N/A>",
-                    "volume": "<industry standard volume or N/A>", 
-                    "estimatedCost": "<UK market price range like £300-500>"
+                    "ingredient": "<ingredient name>",
+                    "purpose": "<what this ingredient does for the condition>",
+                    "concentration": "<recommended concentration range or N/A>",
+                    "application": "<how to apply - AM/PM/frequency>",
+                    "benefits": "<specific benefits for detected condition>"
                 }}
             ]
         }}
 
-        Provide 3-5 different enhancement options with realistic UK market pricing in £.
+        Provide 3-5 ingredient recommendations based on the detected skin conditions.
+        Be specific about concentrations where relevant (e.g., "0.5-1% retinol", "10-20% niacinamide").
+        Focus on ingredients that directly address the identified skin concerns.
         Remember to vary your confidence based on the actual photo quality you observe.
-        Tailor recommendations to what would be most appropriate and commonly requested for the apparent gender in the image.
-
-        This is educational content about beauty industry services and pricing.
         """
 
 # Global service instance

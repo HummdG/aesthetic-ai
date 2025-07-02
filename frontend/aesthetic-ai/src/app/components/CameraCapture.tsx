@@ -123,17 +123,18 @@ export default function CameraCapture({
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-black">
           <video
             ref={videoRef}
-            className="w-full h-64 sm:h-80 object-cover"
+            className="w-full h-80 sm:h-96 md:h-[32rem] lg:h-[36rem] object-cover"
             autoPlay
             playsInline
             muted
             style={{
               transform: "scaleX(-1)", // Mirror effect for natural selfie experience
-              minHeight: "256px",
+              minHeight: "320px", // Increased from 256px
+              maxHeight: "70vh", // Prevent overflow on small screens
             }}
           />
 
-          {/* Face Overlay Guides */}
+          {/* Face Overlay Guides - Updated for larger space */}
           <div className="absolute inset-0 pointer-events-none">
             {/* Corner indicators */}
             <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white/80 rounded-tl-lg"></div>
@@ -141,9 +142,9 @@ export default function CameraCapture({
             <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/80 rounded-bl-lg"></div>
             <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/80 rounded-br-lg"></div>
 
-            {/* Center face guide - oval for face shape */}
+            {/* Center face guide - oval for face shape (adjusted for larger area) */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-32 h-40 sm:w-40 sm:h-48 border-2 border-white/60 rounded-full"></div>
+              <div className="w-40 h-48 sm:w-48 sm:h-56 md:w-52 md:h-60 border-2 border-white/60 rounded-full"></div>
               {/* Center dot */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/80 rounded-full"></div>
             </div>

@@ -25,7 +25,7 @@ export default function PhotoPreview({
             alt="Uploaded image for analysis"
             width={640}
             height={400}
-            className="w-full h-64 object-cover"
+            className="w-full h-80 sm:h-96 md:h-[32rem] lg:h-[36rem] object-cover"
           />
           {/* Analysis Overlay */}
           {isAnalyzing && (

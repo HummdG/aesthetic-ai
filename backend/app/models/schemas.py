@@ -36,6 +36,15 @@ class ErrorResponse(BaseModel):
     detail: str = Field(..., description="Error message")
     error_code: Optional[str] = Field(None, description="Optional error code")
 
+class TreatmentRecommendation(BaseModel):
+    """Model for individual treatment recommendation"""
+    treatment: str = Field(..., description="Treatment name (e.g., 'Lip Enhancement Filler')")
+    area: str = Field(..., description="Treatment area (e.g., 'Lip volume and definition')")
+    severity: str = Field(..., description="Severity level (e.g., 'Mild', 'Moderate', 'Enhancement')")
+    dosage: Optional[str] = Field(None, description="Recommended dosage (e.g., '15-20 units')")
+    volume: Optional[str] = Field(None, description="Volume required (e.g., '0.5-1.0ml')")
+    estimatedCost: str = Field(..., description="Estimated cost range (e.g., '£400-500')")
+
 
 
 

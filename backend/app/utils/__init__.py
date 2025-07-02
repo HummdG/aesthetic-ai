@@ -1,3 +1,5 @@
+# Replace your app/utils/__init__.py content with this:
+
 """
 Utility functions and helpers
 """
@@ -10,11 +12,9 @@ from .pricing import (
     format_price_range
 )
 from .parsing import (
-    clean_confidence_value,
-    clean_recommendation_data,
-    extract_json_from_text,
-    parse_llm_response,
-    validate_analysis_response
+    parse_skin_analysis_response,    # ✅ This exists
+    clean_llm_response,              # ✅ This exists
+    validate_skin_analysis_response  # ✅ This exists (note the correct name)
 )
 
 __all__ = [
@@ -25,9 +25,7 @@ __all__ = [
     "format_price",
     "format_price_range",
     # Parsing utilities
-    "clean_confidence_value",
-    "clean_recommendation_data",
-    "extract_json_from_text", 
-    "parse_llm_response",
-    "validate_analysis_response"
+    "parse_skin_analysis_response",
+    "clean_llm_response",
+    "validate_skin_analysis_response"
 ]

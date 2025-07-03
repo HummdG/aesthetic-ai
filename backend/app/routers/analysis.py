@@ -1,4 +1,4 @@
-# backend/app/api/routes/analysis.py
+# backend/app/routers/analysis.py
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from typing import Optional
 import base64
@@ -7,9 +7,9 @@ import os
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
-# Import your existing schemas
+# Import your existing schemas - FIXED: Use two dots instead of three
 try:
-    from ...models.schemas import SkinAnalysisResponse, IngredientRecommendation
+    from ..models.schemas import SkinAnalysisResponse, IngredientRecommendation
 except ImportError:
     # Fallback if schemas don't exist
     from pydantic import BaseModel, Field

@@ -8,7 +8,7 @@ import json
 from ..services.enhanced_skin_analysis import EnhancedSkinAnalysisService
 from ..models.schemas import SkinAnalysisResponse
 from ..models.survey_schemas import UserSurveyData
-from ..utils.config import settings
+from ..config import settings
 
 router = APIRouter()
 

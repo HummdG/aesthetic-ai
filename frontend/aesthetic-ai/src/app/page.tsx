@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import UserSurveyForm from "./components/UserSurveyForm";
 import Header from "./components/Header";

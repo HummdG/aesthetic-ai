@@ -56,6 +56,24 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
     },
   });
 
+  // Scroll to "Personalized Skin Analysis" section when step changes
+  useEffect(() => {
+    if (currentStep > 0) {
+      // Smooth scroll to the survey section with a slight delay to ensure content has rendered
+      setTimeout(() => {
+        const surveySection = document.getElementById(
+          "personalized-skin-analysis"
+        );
+        if (surveySection) {
+          surveySection.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 100);
+    }
+  }, [currentStep]);
+
   // Survey steps configuration
   const steps: SurveyStep[] = [
     {
@@ -67,26 +85,26 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
       isActive: currentStep === 0,
     },
     {
+      id: "basic-info",
+      title: "Basic Information",
+      subtitle: "Personal details for analysis",
+      icon: <InfoIcon />,
+      isCompleted: currentStep > 1,
+      isActive: currentStep === 1,
+    },
+    {
       id: "medical-history",
       title: "Medical History",
       subtitle: "Health information for safer recommendations",
       icon: <MedicalIcon />,
-      isCompleted: currentStep > 1,
-      isActive: currentStep === 1,
+      isCompleted: currentStep > 2,
+      isActive: currentStep === 2,
     },
     {
       id: "skin-treatment",
       title: "Skin & Treatment",
       subtitle: "Your skincare experience",
       icon: <SkinIcon />,
-      isCompleted: currentStep > 2,
-      isActive: currentStep === 2,
-    },
-    {
-      id: "basic-info",
-      title: "Basic Information",
-      subtitle: "Personal details for analysis",
-      icon: <InfoIcon />,
       isCompleted: currentStep > 3,
       isActive: currentStep === 3,
     },
@@ -144,6 +162,16 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
     onComplete(completeData);
   };
 
+  // Handle next step with scroll
+  const handleNextStep = () => {
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  // Handle previous step with scroll
+  const handlePreviousStep = () => {
+    setCurrentStep((prev) => Math.max(0, prev - 1));
+  };
+
   // Multi-select handler
   const handleMultiSelect = (
     field: string,
@@ -193,15 +221,20 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-nude-50 to-nude-100 py-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-serif font-bold text-brown-900 mb-2">
-            Personalized Skin Analysis
-          </h1>
-          <p className="text-brown-700 font-body text-lg">
-            Help us provide you with the most accurate recommendations
-          </p>
-        </div>
+        {/* Survey Section Header */}
+        {currentStep > 0 && (
+          <div
+            id="personalized-skin-analysis"
+            className="text-center mb-8 select-none"
+          >
+            <h2 className="text-3xl font-serif font-bold text-brown-900 mb-2 select-none">
+              Personalized Skin Analysis
+            </h2>
+            <p className="text-brown-700 font-body text-lg select-none">
+              Help us provide you with the most accurate recommendations
+            </p>
+          </div>
+        )}
 
         {/* Progress Steps */}
         {currentStep > 0 && (
@@ -210,7 +243,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
               {steps.map((step, index) => (
                 <div key={step.id} className="flex items-center">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 select-none ${
                       step.isCompleted
                         ? "bg-primary text-white"
                         : step.isActive
@@ -222,7 +255,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`w-16 h-1 mx-2 transition-all duration-300 ${
+                      className={`w-16 h-1 mx-2 transition-all duration-300 select-none ${
                         step.isCompleted ? "bg-primary" : "bg-nude-200"
                       }`}
                     />
@@ -230,11 +263,11 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                 </div>
               ))}
             </div>
-            <div className="text-center">
-              <h2 className="text-2xl font-serif font-semibold text-brown-900 mb-1">
+            <div className="text-center select-none">
+              <h2 className="text-2xl font-serif font-semibold text-brown-900 mb-1 select-none">
                 {steps[currentStep]?.title}
               </h2>
-              <p className="text-brown-600 font-body">
+              <p className="text-brown-600 font-body select-none">
                 {steps[currentStep]?.subtitle}
               </p>
             </div>
@@ -246,21 +279,21 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
           {/* Step 0: Username Check */}
           {currentStep === 0 && (
             <div className="space-y-6">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-brown-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="text-center mb-8 select-none">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-brown-600 rounded-full flex items-center justify-center mx-auto mb-4 select-none">
                   <UserIcon className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-xl font-serif font-semibold text-brown-900 mb-2">
+                <h3 className="text-xl font-serif font-semibold text-brown-900 mb-2 select-none">
                   Welcome to Your Skin Journey
                 </h3>
-                <p className="text-brown-600 font-body">
+                <p className="text-brown-600 font-body select-none">
                   Enter your username to begin or continue your personalized
                   analysis
                 </p>
               </div>
 
               <div className="max-w-md mx-auto">
-                <label className="block text-sm font-medium text-brown-900 mb-2">
+                <label className="block text-sm font-medium text-brown-900 mb-2 select-none">
                   Username
                 </label>
                 <input
@@ -276,7 +309,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                 <button
                   onClick={handleUsernameSubmit}
                   disabled={!username.trim()}
-                  className="w-full mt-4 bg-primary hover:bg-primary-hover text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mt-4 bg-primary hover:bg-primary-hover text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed select-none"
                 >
                   Continue
                 </button>
@@ -284,8 +317,115 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
             </div>
           )}
 
-          {/* Step 1: Medical History */}
+          {/* Step 1: Basic Information */}
           {currentStep === 1 && (
+            <div className="space-y-8">
+              <FormSection
+                title="Personal Details"
+                subtitle="Basic information for analysis"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-brown-900 mb-2 select-none">
+                      Age
+                    </label>
+                    <input
+                      type="number"
+                      min="18"
+                      max="100"
+                      value={formData.basicInfo.age || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          "basicInfo.age",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className="w-full px-4 py-3 border border-nude-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="Enter your age"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="isPregnant"
+                      checked={formData.basicInfo.isPregnant}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          "basicInfo.isPregnant",
+                          e.target.checked
+                        )
+                      }
+                      className="w-5 h-5 text-primary focus:ring-primary rounded"
+                    />
+                    <label
+                      htmlFor="isPregnant"
+                      className="text-brown-900 font-body cursor-pointer select-none"
+                    >
+                      Currently pregnant or nursing
+                    </label>
+                  </div>
+                </div>
+              </FormSection>
+
+              <FormSection
+                title="Sun Exposure"
+                subtitle="How much sun do you typically get?"
+              >
+                <div className="space-y-3">
+                  {SUN_EXPOSURE_OPTIONS.map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-start space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none"
+                    >
+                      <input
+                        type="radio"
+                        name="sunExposure"
+                        value={option.value}
+                        checked={
+                          formData.basicInfo.sunExposure === option.value
+                        }
+                        onChange={(e) =>
+                          handleFieldChange(
+                            "basicInfo.sunExposure",
+                            e.target.value
+                          )
+                        }
+                        className="mt-1 text-primary focus:ring-primary"
+                      />
+                      <div>
+                        <div className="font-semibold text-brown-900 select-none">
+                          {option.label.split(" - ")[0]}
+                        </div>
+                        <div className="text-sm text-brown-600 select-none">
+                          {option.label.split(" - ")[1]}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </FormSection>
+
+              <FormSection
+                title="Family History"
+                subtitle="Any genetic skin conditions in your family?"
+              >
+                <MultiSelectGrid
+                  options={GENETIC_CONDITIONS}
+                  selected={formData.basicInfo.geneticConditions}
+                  onChange={(value, checked) =>
+                    handleMultiSelect(
+                      "basicInfo.geneticConditions",
+                      value,
+                      checked
+                    )
+                  }
+                />
+              </FormSection>
+            </div>
+          )}
+
+          {/* Step 2: Medical History */}
+          {currentStep === 2 && (
             <div className="space-y-8">
               <FormSection
                 title="Allergies"
@@ -339,8 +479,8 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
             </div>
           )}
 
-          {/* Step 2: Skin & Treatment */}
-          {currentStep === 2 && (
+          {/* Step 3: Skin & Treatment */}
+          {currentStep === 3 && (
             <div className="space-y-8">
               <FormSection
                 title="Skincare Experience"
@@ -362,7 +502,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                     />
                     <label
                       htmlFor="hasUsedSkincare"
-                      className="text-brown-900 font-body"
+                      className="text-brown-900 font-body cursor-pointer select-none"
                     >
                       I have used skincare products before
                     </label>
@@ -378,7 +518,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                   {SKIN_TYPES.map((type) => (
                     <label
                       key={type.value}
-                      className="flex items-start space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer"
+                      className="flex items-start space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none"
                     >
                       <input
                         type="radio"
@@ -391,10 +531,10 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                         className="mt-1 text-primary focus:ring-primary"
                       />
                       <div>
-                        <div className="font-semibold text-brown-900">
+                        <div className="font-semibold text-brown-900 select-none">
                           {type.label.split(" - ")[0]}
                         </div>
-                        <div className="text-sm text-brown-600">
+                        <div className="text-sm text-brown-600 select-none">
                           {type.label.split(" - ")[1]}
                         </div>
                       </div>
@@ -421,142 +561,35 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
               </FormSection>
             </div>
           )}
-
-          {/* Step 3: Basic Information */}
-          {currentStep === 3 && (
-            <div className="space-y-8">
-              <FormSection
-                title="Personal Details"
-                subtitle="Basic information for analysis"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-brown-900 mb-2">
-                      Age
-                    </label>
-                    <input
-                      type="number"
-                      min="18"
-                      max="100"
-                      value={formData.basicInfo.age || ""}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          "basicInfo.age",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-4 py-3 border border-nude-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      placeholder="Enter your age"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id="isPregnant"
-                      checked={formData.basicInfo.isPregnant}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          "basicInfo.isPregnant",
-                          e.target.checked
-                        )
-                      }
-                      className="w-5 h-5 text-primary focus:ring-primary rounded"
-                    />
-                    <label
-                      htmlFor="isPregnant"
-                      className="text-brown-900 font-body"
-                    >
-                      Currently pregnant or nursing
-                    </label>
-                  </div>
-                </div>
-              </FormSection>
-
-              <FormSection
-                title="Sun Exposure"
-                subtitle="How much sun do you typically get?"
-              >
-                <div className="space-y-3">
-                  {SUN_EXPOSURE_OPTIONS.map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex items-start space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="sunExposure"
-                        value={option.value}
-                        checked={
-                          formData.basicInfo.sunExposure === option.value
-                        }
-                        onChange={(e) =>
-                          handleFieldChange(
-                            "basicInfo.sunExposure",
-                            e.target.value
-                          )
-                        }
-                        className="mt-1 text-primary focus:ring-primary"
-                      />
-                      <div>
-                        <div className="font-semibold text-brown-900">
-                          {option.label.split(" - ")[0]}
-                        </div>
-                        <div className="text-sm text-brown-600">
-                          {option.label.split(" - ")[1]}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </FormSection>
-
-              <FormSection
-                title="Family History"
-                subtitle="Any genetic skin conditions in your family?"
-              >
-                <MultiSelectGrid
-                  options={GENETIC_CONDITIONS}
-                  selected={formData.basicInfo.geneticConditions}
-                  onChange={(value, checked) =>
-                    handleMultiSelect(
-                      "basicInfo.geneticConditions",
-                      value,
-                      checked
-                    )
-                  }
-                />
-              </FormSection>
-            </div>
-          )}
         </div>
 
         {/* Navigation Buttons */}
         {currentStep > 0 && (
           <div className="flex justify-between">
             <button
-              onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
-              className="px-6 py-3 border border-nude-300 text-brown-700 rounded-lg hover:border-primary hover:text-primary transition-all duration-200"
+              onClick={handlePreviousStep}
+              className="px-6 py-3 border border-nude-300 text-brown-700 rounded-lg hover:border-primary hover:text-primary transition-all duration-200 select-none cursor-pointer"
             >
               Previous
             </button>
             <div className="flex space-x-4">
               <button
                 onClick={onSkip}
-                className="px-6 py-3 text-brown-600 hover:text-brown-800 transition-colors"
+                className="px-6 py-3 text-brown-600 hover:text-brown-800 transition-colors select-none cursor-pointer"
               >
                 Skip Survey
               </button>
               {currentStep < steps.length - 1 ? (
                 <button
-                  onClick={() => setCurrentStep((prev) => prev + 1)}
-                  className="px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all duration-200"
+                  onClick={handleNextStep}
+                  className="px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all duration-200 shadow-md select-none cursor-pointer"
                 >
                   Next Step
                 </button>
               ) : (
                 <button
                   onClick={handleComplete}
-                  className="px-6 py-3 bg-gradient-to-r from-primary to-brown-600 hover:from-primary-hover hover:to-brown-700 text-white rounded-lg font-semibold transition-all duration-200"
+                  className="px-8 py-4 bg-primary hover:bg-brown-700 text-white rounded-lg font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 select-none ring-2 ring-primary ring-opacity-50 cursor-pointer"
                 >
                   Complete Survey
                 </button>
@@ -577,10 +610,10 @@ const FormSection: React.FC<{
 }> = ({ title, subtitle, children }) => (
   <div>
     <div className="mb-4">
-      <h3 className="text-lg font-serif font-semibold text-brown-900 mb-1">
+      <h3 className="text-lg font-serif font-semibold text-brown-900 mb-1 select-none">
         {title}
       </h3>
-      <p className="text-brown-600 font-body text-sm">{subtitle}</p>
+      <p className="text-brown-600 font-body text-sm select-none">{subtitle}</p>
     </div>
     {children}
   </div>
@@ -595,7 +628,7 @@ const MultiSelectGrid: React.FC<{
     {options.map((option) => (
       <label
         key={option}
-        className="flex items-center space-x-2 p-3 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer"
+        className="flex items-center space-x-2 p-3 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none"
       >
         <input
           type="checkbox"
@@ -603,7 +636,9 @@ const MultiSelectGrid: React.FC<{
           onChange={(e) => onChange(option, e.target.checked)}
           className="text-primary focus:ring-primary rounded"
         />
-        <span className="text-sm text-brown-900 font-body">{option}</span>
+        <span className="text-sm text-brown-900 font-body select-none">
+          {option}
+        </span>
       </label>
     ))}
   </div>
@@ -641,7 +676,7 @@ const CustomInputList: React.FC<{
         <button
           onClick={addValue}
           disabled={!inputValue.trim()}
-          className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50"
+          className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 select-none"
         >
           Add
         </button>
@@ -650,12 +685,12 @@ const CustomInputList: React.FC<{
         {values.map((value) => (
           <span
             key={value}
-            className="inline-flex items-center px-3 py-1 bg-nude-100 text-brown-800 rounded-full text-sm"
+            className="inline-flex items-center px-3 py-1 bg-nude-100 text-brown-800 rounded-full text-sm select-none"
           >
             {value}
             <button
               onClick={() => removeValue(value)}
-              className="ml-2 text-brown-600 hover:text-brown-800"
+              className="ml-2 text-brown-600 hover:text-brown-800 cursor-pointer select-none"
             >
               ×
             </button>

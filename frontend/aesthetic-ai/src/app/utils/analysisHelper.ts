@@ -128,7 +128,8 @@ export const analyzeSkinWithSurvey = async (
   
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   
-  const response = await fetch(`${apiUrl}/analyze/skin`, {
+  // FIX: Add the /api/v1 prefix to match backend routing
+  const response = await fetch(`${apiUrl}/api/v1/analyze/skin`, {
     method: 'POST',
     body: formData,
   });

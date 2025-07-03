@@ -346,7 +346,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                       placeholder="Enter your age"
                     />
                   </div>
-                  <div className="flex items-center space-x-4 p-4 border border-nude-200 rounded-lg">
+                  <div className="flex items-center space-x-3 p-4 border border-nude-200 rounded-lg">
                     <input
                       type="checkbox"
                       id="isPregnant"
@@ -357,11 +357,11 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                           e.target.checked
                         )
                       }
-                      className="w-6 h-6 text-primary focus:ring-primary rounded"
+                      className="w-6 h-6 text-primary focus:ring-primary rounded flex-shrink-0"
                     />
                     <label
                       htmlFor="isPregnant"
-                      className="text-base text-brown-900 font-body cursor-pointer select-none leading-tight"
+                      className="text-base text-brown-900 font-body cursor-pointer select-none leading-tight flex-1"
                     >
                       Currently pregnant or nursing
                     </label>
@@ -377,7 +377,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                   {SUN_EXPOSURE_OPTIONS.map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-start space-x-4 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none min-h-[80px] touch-manipulation"
+                      className="flex items-start space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none min-h-[80px] touch-manipulation group"
                     >
                       <input
                         type="radio"
@@ -392,7 +392,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                             e.target.value
                           )
                         }
-                        className="mt-1 text-primary focus:ring-primary w-5 h-5 min-w-[20px]"
+                        className="mt-1 text-primary focus:ring-primary w-5 h-5 min-w-[20px] flex-shrink-0"
                       />
                       <div className="flex-1">
                         <div className="font-semibold text-brown-900 select-none text-base mb-1">
@@ -489,7 +489,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                 subtitle="Tell us about your skincare journey"
               >
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-4 p-4 border border-nude-200 rounded-lg">
+                  <div className="flex items-center space-x-3 p-4 border border-nude-200 rounded-lg">
                     <input
                       type="checkbox"
                       id="hasUsedSkincare"
@@ -500,11 +500,11 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                           e.target.checked
                         )
                       }
-                      className="w-6 h-6 text-primary focus:ring-primary rounded"
+                      className="w-6 h-6 text-primary focus:ring-primary rounded flex-shrink-0"
                     />
                     <label
                       htmlFor="hasUsedSkincare"
-                      className="text-base text-brown-900 font-body cursor-pointer select-none"
+                      className="text-base text-brown-900 font-body cursor-pointer select-none flex-1"
                     >
                       I have used skincare products before
                     </label>
@@ -520,7 +520,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                   {SKIN_TYPES.map((type) => (
                     <label
                       key={type.value}
-                      className="flex items-start space-x-4 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none min-h-[80px] touch-manipulation"
+                      className="flex items-start space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none min-h-[80px] touch-manipulation group"
                     >
                       <input
                         type="radio"
@@ -530,7 +530,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
                         onChange={(e) =>
                           handleFieldChange("skinInfo.skinType", e.target.value)
                         }
-                        className="mt-1 text-primary focus:ring-primary w-5 h-5 min-w-[20px]"
+                        className="mt-1 text-primary focus:ring-primary w-5 h-5 min-w-[20px] flex-shrink-0"
                       />
                       <div className="flex-1">
                         <div className="font-semibold text-brown-900 select-none text-base mb-1">
@@ -632,15 +632,15 @@ const MultiSelectGrid: React.FC<{
     {options.map((option) => (
       <label
         key={option}
-        className="flex items-center space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none min-h-[60px] touch-manipulation"
+        className="flex items-center space-x-3 p-4 border border-nude-200 rounded-lg hover:border-primary transition-colors cursor-pointer select-none min-h-[60px] touch-manipulation group"
       >
         <input
           type="checkbox"
           checked={selected.includes(option)}
           onChange={(e) => onChange(option, e.target.checked)}
-          className="text-primary focus:ring-primary rounded w-5 h-5 min-w-[20px]"
+          className="text-primary focus:ring-primary rounded w-5 h-5 min-w-[20px] flex-shrink-0"
         />
-        <span className="text-base sm:text-sm text-brown-900 font-body select-none leading-tight">
+        <span className="text-base sm:text-sm text-brown-900 font-body select-none leading-tight flex-1">
           {option}
         </span>
       </label>

@@ -130,10 +130,10 @@ class LLMService:
         - Eczema/Atopic dermatitis (dry patches, inflammation, rough texture)
 
         IMPORTANT: Rate your confidence based on the photo quality - it should always be an INT:
-        - Excellent photo (crystal clear, perfect lighting, ideal angle): 90-98
-        - Good photo (clear, decent lighting, good angle): 80-89  
-        - Average photo (somewhat blurry, okay lighting, slight angle): 65-79
-        - Poor photo (very blurry, bad lighting, difficult to see): 30-64
+        - Excellent photo (crystal clear, perfect lighting, ideal angle): a random INT between 90-98
+        - Good photo (clear, decent lighting, good angle): a random INT between 80-89  
+        - Average photo (somewhat blurry, okay lighting, slight angle): a random INT between 65-79
+        - Poor photo (very blurry, bad lighting, difficult to see): a random INT between 0-64
 
         INGREDIENT RECOMMENDATIONS should focus on evidence-based skincare ingredients like:
         - Retinol/Retinoids (for acne, aging, hyperpigmentation)

@@ -31,7 +31,7 @@ export default function PhotoPreview({
           {isAnalyzing && (
             <div className="absolute inset-0 bg-white/90 flex items-center justify-center">
               <div className="text-center">
-                <div className="loading-spinner mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <h3 className="text-lg font-serif font-semibold text-brown-900 mb-2">
                   Analyzing Image
                 </h3>

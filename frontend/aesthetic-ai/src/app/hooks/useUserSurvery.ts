@@ -1,8 +1,87 @@
 // src/app/hooks/useUserSurvey.ts
 import { useState, useCallback } from 'react';
 import { UserSurveyData } from '../types/userSurvey';
-import { UserStorageService } from '../utils/userStorage';
-import { AnalysisHelper } from '../utils/analysisHelper'
+
+// User Storage Service (inline for now to avoid separate file)
+class UserStorageService {
+  private static readonly STORAGE_PREFIX = 'skinAnalysis_';
+  private static readonly USERS_LIST_KEY = 'skinAnalysis_users';
+
+  // Save user survey data
+  static saveUserData(userData: UserSurveyData): void {
+    try {
+      const key = `${this.STORAGE_PREFIX}${userData.username}`;
+      localStorage.setItem(key, JSON.stringify(userData));
+      
+      // Update users list
+      this.updateUsersList(userData.username);
+    } catch (error) {
+      console.error('Error saving user data:', error);
+      throw new Error('Failed to save user data');
+    }
+  }
+
+  // Load user survey data
+  static loadUserData(username: string): UserSurveyData | null {
+    try {
+      const key = `${this.STORAGE_PREFIX}${username}`;
+      const data = localStorage.getItem(key);
+      
+      if (data) {
+        return JSON.parse(data) as UserSurveyData;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      return null;
+    }
+  }
+
+  // Check if user exists
+  static userExists(username: string): boolean {
+    const key = `${this.STORAGE_PREFIX}${username}`;
+    return localStorage.getItem(key) !== null;
+  }
+
+  // Get all users
+  static getAllUsers(): string[] {
+    try {
+      const users = localStorage.getItem(this.USERS_LIST_KEY);
+      return users ? JSON.parse(users) : [];
+    } catch (error) {
+      console.error('Error getting users list:', error);
+      return [];
+    }
+  }
+
+  // Update users list
+  private static updateUsersList(username: string): void {
+    try {
+      const users = this.getAllUsers();
+      if (!users.includes(username)) {
+        users.push(username);
+        localStorage.setItem(this.USERS_LIST_KEY, JSON.stringify(users));
+      }
+    } catch (error) {
+      console.error('Error updating users list:', error);
+    }
+  }
+
+  // Delete user data
+  static deleteUserData(username: string): void {
+    try {
+      const key = `${this.STORAGE_PREFIX}${username}`;
+      localStorage.removeItem(key);
+      
+      // Remove from users list
+      const users = this.getAllUsers();
+      const updatedUsers = users.filter(user => user !== username);
+      localStorage.setItem(this.USERS_LIST_KEY, JSON.stringify(updatedUsers));
+    } catch (error) {
+      console.error('Error deleting user data:', error);
+    }
+  }
+}
 
 export const useUserSurvey = () => {
   const [currentUser, setCurrentUser] = useState<UserSurveyData | null>(null);
@@ -64,39 +143,4 @@ export const useUserSurvey = () => {
     clearCurrentUser,
     getAllUsers
   };
-};
-
-// Updated API call function to include survey data
-export const analyzeSkinWithSurvey = async (
-  file: File, 
-  userData: UserSurveyData | null = null
-): Promise<any> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  // Include survey data as context
-  if (userData) {
-    const context = AnalysisHelper.createAnalysisContext(userData);
-    const warnings = AnalysisHelper.generateSafetyWarnings(userData);
-    const ageRecommendations = AnalysisHelper.getAgeRecommendations(userData.basicInfo.age);
-    
-    formData.append('userContext', context);
-    formData.append('safetyWarnings', JSON.stringify(warnings));
-    formData.append('ageRecommendations', JSON.stringify(ageRecommendations));
-    formData.append('username', userData.username);
-  }
-  
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  
-  const response = await fetch(`${apiUrl}/analyze/skin`, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `HTTP ${response.status}: Analysis failed`);
-  }
-  
-  return await response.json();
 };

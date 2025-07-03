@@ -1,71 +1,76 @@
-"""
-FastAPI application setup and configuration
-"""
-import logging
-from fastapi import FastAPI
+# backend/app/main.py
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import os
+from datetime import datetime
 
-from app.config import settings
-from app.routers import health, analysis
+# Import your existing routers
+from .routers import health, analysis, enhanced_analysis
 
-# Setup logging
-logger = logging.getLogger(__name__)
+# Create FastAPI app
+app = FastAPI(
+    title="Aesthetic AI Backend",
+    description="FastAPI service for AI-powered aesthetic facial analysis with survey integration",
+    version="1.0.0"
+)
 
-def create_app() -> FastAPI:
-    """
-    Create and configure FastAPI application
-    
-    Returns:
-        Configured FastAPI application instance
-    """
-    app = FastAPI(
-        title=settings.APP_TITLE,
-        description=settings.APP_DESCRIPTION,
-        version=settings.APP_VERSION,
-        docs_url="/docs",
-        redoc_url="/redoc"
-    )
-    
-    # Add CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    # Include routers
-    app.include_router(health.router)
-    app.include_router(analysis.router)
-    
-    # Add startup event
-    @app.on_event("startup")
-    async def startup_event():
-        """Log application startup"""
-        logger.info(f"🚀 {settings.APP_TITLE} v{settings.APP_VERSION} starting up...")
-        logger.info(f"📋 Documentation available at: http://{settings.HOST}:{settings.PORT}/docs")
-    
-    # Add shutdown event
-    @app.on_event("shutdown")
-    async def shutdown_event():
-        """Log application shutdown"""
-        logger.info(f"🛑 {settings.APP_TITLE} shutting down...")
-    
-    # Root endpoint
-    @app.get("/")
-    async def root():
-        """Root endpoint with basic API information"""
-        return {
-            "name": settings.APP_TITLE,
-            "version": settings.APP_VERSION,
-            "status": "running",
-            "docs": "/docs",
-            "health": "/health",
-            "analyze": "/analyze"
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(analysis.router, prefix="/api/v1", tags=["analysis"])
+app.include_router(enhanced_analysis.router, prefix="/api/v1", tags=["enhanced-analysis"])
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "service": "aesthetic-ai-backend",
+        "version": "1.0.0",
+        "features": ["skin-analysis", "survey-integration", "enhanced-recommendations"]
+    }
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "Aesthetic AI Backend API",
+        "docs": "/docs",
+        "health": "/health",
+        "endpoints": {
+            "basic_analysis": "/api/v1/analyze/skin/basic",
+            "enhanced_analysis": "/api/v1/analyze/skin",
+            "health": "/api/v1/health"
         }
-    
-    return app
+    }
 
-# Create the app instance
-app = create_app()
+# Error handlers
+@app.exception_handler(404)
+async def not_found_handler(request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Endpoint not found"}
+    )
+
+@app.exception_handler(500)
+async def internal_error_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

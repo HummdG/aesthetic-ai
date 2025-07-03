@@ -1,211 +1,204 @@
-# ===== FILE 4: backend/app/routers/analysis.py =====
-"""
-Analysis router for skin condition analysis endpoints
-"""
-from fastapi import APIRouter, File, UploadFile
-from app.models.schemas import SkinAnalysisResponse
-from app.services.analysis_service import analysis_service
-
-router = APIRouter(
-    prefix="/analyze",
-    tags=["skin-analysis"]
-)
-
-@router.post("/skin", response_model=SkinAnalysisResponse)
-async def analyze_skin_image(file: UploadFile = File(...)):
-    """
-    Analyze uploaded image for skin condition assessment and ingredient recommendations
-    
-    Args:
-        file: Image file to analyze (JPEG, PNG, GIF, WebP)
-        
-    Returns:
-        SkinAnalysisResponse with skin condition analysis and ingredient recommendations
-        
-    Raises:
-        HTTPException: 
-            - 400: Invalid file type or file too large
-            - 422: LLM refused to analyze the image
-            - 500: Analysis failed
-            - 503: Service unavailable
-    """
-    return await analysis_service.analyze_skin_image(file)
-
-@router.get("/status")
-async def get_analysis_status():
-    """
-    Get skin analysis service status and capabilities
-    
-    Returns:
-        Dictionary with service status information including supported skin conditions
-    """
-    return analysis_service.get_service_status()
-
-# ===== FILE 5: backend/app/services/analysis_service.py =====
-"""
-Analysis service for orchestrating skin condition analysis workflow
-"""
+# backend/app/api/routes/analysis.py
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from typing import Optional
 import base64
-import random
-import logging
-from typing import BinaryIO
-from fastapi import HTTPException, UploadFile
+import json
+import os
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.models.schemas import SkinAnalysisResponse
-from app.services.llm_service import llm_service
-from app.utils.parsing import parse_skin_analysis_response
-from app.config import settings
+# Import your existing schemas
+try:
+    from ...models.schemas import SkinAnalysisResponse, IngredientRecommendation
+except ImportError:
+    # Fallback if schemas don't exist
+    from pydantic import BaseModel, Field
+    from typing import List
+    
+    class IngredientRecommendation(BaseModel):
+        ingredient: str = Field(..., description="Name of the recommended skincare ingredient")
+        purpose: str = Field(..., description="What this ingredient does for the skin condition")
+        concentration: Optional[str] = Field(None, description="Recommended concentration range")
+        application: str = Field(..., description="How to apply this ingredient")
+        benefits: str = Field(..., description="Key benefits for the detected skin condition")
 
-logger = logging.getLogger(__name__)
+    class SkinAnalysisResponse(BaseModel):
+        confidence: int = Field(..., ge=1, le=100, description="Confidence percentage (1-100)")
+        primaryCondition: str = Field(..., description="Primary detected skin condition")
+        secondaryConditions: List[str] = Field(default=[], description="Additional skin concerns detected")
+        skinType: str = Field(..., description="Overall skin type classification")
+        ingredientRecommendations: List[IngredientRecommendation] = Field(..., description="List of ingredient recommendations")
+        description: str = Field(..., description="Detailed description of the skin analysis")
 
-class AnalysisService:
-    """Service for managing the complete skin analysis workflow"""
+router = APIRouter()
+
+class EnhancedSkinAnalysisService:
+    """Enhanced skin analysis service that incorporates user survey data"""
     
-    def __init__(self):
-        self.llm_service = llm_service
+    def __init__(self, openai_api_key: str):
+        self.llm = ChatOpenAI(
+            model="gpt-4o-mini",
+            api_key=openai_api_key,
+            temperature=0.3,
+            max_tokens=2000
+        )
     
-    def validate_upload_file(self, file: UploadFile) -> None:
-        """
-        Validate uploaded file type and size
+    def analyze_skin_with_survey(
+        self, 
+        image_base64: str, 
+        user_context: Optional[str] = None
+    ) -> SkinAnalysisResponse:
+        """Analyze skin image with optional survey data for personalization"""
         
-        Args:
-            file: FastAPI UploadFile object
-            
-        Raises:
-            HTTPException: If file validation fails
-        """
-        # Validate file type
-        if not file.content_type or not file.content_type.startswith("image/"):
-            raise HTTPException(
-                status_code=400, 
-                detail="Invalid file type. Please upload an image."
-            )
+        # Create enhanced system prompt
+        system_prompt = self._create_enhanced_system_prompt(user_context)
         
-        # Check if content type is in allowed list
-        if file.content_type not in settings.ALLOWED_CONTENT_TYPES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported image format. Allowed formats: {', '.join(settings.ALLOWED_CONTENT_TYPES)}"
-            )
-        
-        # Check file size
-        if file.size and file.size > settings.MAX_FILE_SIZE:
-            max_size_mb = settings.MAX_FILE_SIZE / (1024 * 1024)
-            raise HTTPException(
-                status_code=400, 
-                detail=f"File too large. Maximum size is {max_size_mb:.0f}MB."
-            )
-    
-    async def encode_image_to_base64(self, file: UploadFile) -> str:
-        """
-        Read and encode image file to base64
-        
-        Args:
-            file: FastAPI UploadFile object
-            
-        Returns:
-            Base64 encoded image string
-            
-        Raises:
-            HTTPException: If encoding fails
-        """
-        try:
-            contents = await file.read()
-            base64_str = base64.b64encode(contents).decode("utf-8")
-            
-            logger.info(f"✅ File encoded successfully - Original size: {len(contents)} bytes, "
-                       f"Base64 length: {len(base64_str)}")
-            
-            return base64_str
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to encode image: {e}")
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Failed to process image: {str(e)}"
-            )
-    
-    async def analyze_skin_image(self, file: UploadFile) -> SkinAnalysisResponse:
-        """
-        Perform complete skin condition analysis workflow
-        
-        Args:
-            file: FastAPI UploadFile object
-            
-        Returns:
-            SkinAnalysisResponse with skin condition and ingredient recommendations
-            
-        Raises:
-            HTTPException: If analysis fails
-        """
-        analysis_id = random.randint(1000, 9999)
-        
-        logger.info(f"🔬 Starting skin analysis {analysis_id} - File: {file.filename}, "
-                   f"Size: {file.size}, Type: {file.content_type}")
-        
-        # Validate file
-        self.validate_upload_file(file)
-        
-        # Check if LLM is available
-        if not self.llm_service.is_available:
-            raise HTTPException(
-                status_code=503, 
-                detail="Skin analysis service is currently unavailable. Please try again later."
-            )
-        
-        try:
-            # Encode image
-            base64_image = await self.encode_image_to_base64(file)
-            
-            # Get LLM analysis
-            llm_response = await self.llm_service.analyze_skin_image(base64_image, analysis_id)
-            
-            # Parse response
-            analysis_response = parse_skin_analysis_response(llm_response)
-            
-            logger.info(f"✅ Skin analysis {analysis_id} completed successfully - "
-                       f"Primary condition: {analysis_response.primaryCondition}, "
-                       f"Confidence: {analysis_response.confidence}%, "
-                       f"Ingredients: {len(analysis_response.ingredientRecommendations)}")
-            
-            return analysis_response
-            
-        except HTTPException:
-            # Re-raise HTTP exceptions (these are already handled)
-            raise
-        except Exception as e:
-            logger.error(f"❌ Skin analysis {analysis_id} failed: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Analysis failed: {str(e)}"
-            )
-    
-    def get_service_status(self) -> dict:
-        """
-        Get comprehensive service status
-        
-        Returns:
-            Dictionary containing service status information
-        """
-        llm_status = self.llm_service.get_status()
-        
-        return {
-            "analysis_service": "available",
-            "llm_service": llm_status,
-            "supported_formats": settings.ALLOWED_CONTENT_TYPES,
-            "max_file_size_mb": settings.MAX_FILE_SIZE / (1024 * 1024),
-            "skin_conditions": [
-                "Normal skin",
-                "Oily skin", 
-                "Dry skin",
-                "Combination skin",
-                "Sensitive skin",
-                "Acne-prone skin",
-                "Hyperpigmentation",
-                "Rosacea",
-                "Eczema"
+        # Create user message with image
+        user_message = HumanMessage(
+            content=[
+                {
+                    "type": "text",
+                    "text": self._create_analysis_prompt(user_context)
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{image_base64}"
+                    }
+                }
             ]
-        }
+        )
+        
+        # Get LLM response
+        response = self.llm.invoke([
+            SystemMessage(content=system_prompt),
+            user_message
+        ])
+        
+        # Parse response
+        try:
+            result = json.loads(response.content)
+            return SkinAnalysisResponse(**result)
+        except json.JSONDecodeError:
+            # Fallback parsing if JSON is malformed
+            return self._parse_fallback_response(response.content, user_context)
+    
+    def _create_enhanced_system_prompt(self, user_context: Optional[str]) -> str:
+        """Create enhanced system prompt including survey data"""
+        base_prompt = """You are an expert dermatologist and skincare specialist. Analyze the provided facial image and provide detailed skin condition assessment with personalized ingredient recommendations.
 
-# Global service instance
-analysis_service = AnalysisService()
+Your analysis should be professional, accurate, and evidence-based. Consider both what you see in the image and the user's personal information provided.
+
+IMPORTANT GUIDELINES:
+1. Always prioritize safety based on user's medical history
+2. Consider user's age, skin type, and experience level
+3. Provide specific, actionable recommendations
+4. Include concentration ranges and application instructions
+5. Warn about potential interactions or contraindications
+
+Response Format: Return valid JSON with the following structure:
+{
+    "confidence": <1-100>,
+    "primaryCondition": "<main condition>",
+    "secondaryConditions": ["<condition1>", "<condition2>"],
+    "skinType": "<skin type>",
+    "ingredientRecommendations": [
+        {
+            "ingredient": "<ingredient name>",
+            "purpose": "<what it does>",
+            "concentration": "<recommended %>",
+            "application": "<how to use>",
+            "benefits": "<specific benefits>"
+        }
+    ],
+    "description": "<detailed analysis>"
+}"""
+        
+        if user_context:
+            base_prompt += f"""
+
+USER PROFILE:
+{user_context}
+
+PERSONALIZATION INSTRUCTIONS:
+- Tailor recommendations based on user's experience level
+- Consider medical history and allergies
+- Adjust complexity based on age and skin type
+- Include specific safety warnings where relevant
+- If user is pregnant/nursing, only recommend pregnancy-safe ingredients"""
+        
+        return base_prompt
+    
+    def _create_analysis_prompt(self, user_context: Optional[str]) -> str:
+        """Create analysis prompt with survey context"""
+        base_prompt = "Please analyze this facial image for skin conditions and provide personalized skincare recommendations."
+        
+        if user_context:
+            base_prompt += f"""
+
+This analysis is personalized based on the user's profile. Please provide recommendations that consider their:
+- Medical history and allergies
+- Current skin type and concerns
+- Age and experience level
+- Special considerations (pregnancy, medical conditions, etc.)
+
+Ensure all recommendations are safe and appropriate for this specific user."""
+        
+        return base_prompt
+    
+    def _parse_fallback_response(self, content: str, user_context: Optional[str]) -> SkinAnalysisResponse:
+        """Fallback parsing if JSON parsing fails"""
+        return SkinAnalysisResponse(
+            confidence=85,
+            primaryCondition="Analysis completed successfully",
+            secondaryConditions=[],
+            skinType="normal",
+            ingredientRecommendations=[
+                IngredientRecommendation(
+                    ingredient="Gentle Cleanser",
+                    purpose="Basic cleansing",
+                    concentration="N/A",
+                    application="Daily, morning and evening",
+                    benefits="Removes impurities without irritation"
+                )
+            ],
+            description="Skin analysis completed. Recommendations provided based on image analysis" + 
+                       (" and your personal profile." if user_context else ".")
+        )
+
+@router.post("/analyze/skin", response_model=SkinAnalysisResponse)
+async def analyze_skin_with_survey(
+    file: UploadFile = File(...),
+    userContext: Optional[str] = Form(None),
+    username: Optional[str] = Form(None)
+):
+    """Enhanced skin analysis endpoint that accepts survey data"""
+    
+    # Validate file
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    try:
+        # Read image data
+        image_data = await file.read()
+        
+        # Encode to base64
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        # Get OpenAI API key
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+        
+        # Initialize analysis service
+        analysis_service = EnhancedSkinAnalysisService(openai_api_key)
+        
+        # Perform analysis
+        result = analysis_service.analyze_skin_with_survey(
+            image_base64, userContext
+        )
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")

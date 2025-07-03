@@ -105,3 +105,38 @@ export class AnalysisHelper {
     return recommendations;
   }
 }
+
+// Updated API call function to include survey data
+export const analyzeSkinWithSurvey = async (
+  file: File, 
+  userData: UserSurveyData | null = null
+): Promise<any> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  // Include survey data as context
+  if (userData) {
+    const context = AnalysisHelper.createAnalysisContext(userData);
+    const warnings = AnalysisHelper.generateSafetyWarnings(userData);
+    const ageRecommendations = AnalysisHelper.getAgeRecommendations(userData.basicInfo.age);
+    
+    formData.append('userContext', context);
+    formData.append('safetyWarnings', JSON.stringify(warnings));
+    formData.append('ageRecommendations', JSON.stringify(ageRecommendations));
+    formData.append('username', userData.username);
+  }
+  
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  
+  const response = await fetch(`${apiUrl}/analyze/skin`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `HTTP ${response.status}: Analysis failed`);
+  }
+  
+  return await response.json();
+};

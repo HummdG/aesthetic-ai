@@ -221,17 +221,6 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-nude-50 to-nude-100 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-6 sm:mb-8 select-none">
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-brown-900 mb-2 select-none">
-            AI-Powered Skin Analysis
-          </h1>
-          <p className="text-base sm:text-lg text-brown-700 font-body select-none px-4">
-            Discover your skin condition and get personalized ingredient
-            recommendations powered by AI
-          </p>
-        </div>
-
         {/* Survey Section Header */}
         {currentStep > 0 && (
           <div

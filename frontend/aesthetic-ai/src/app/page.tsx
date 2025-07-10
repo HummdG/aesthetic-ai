@@ -109,7 +109,7 @@ const HomePage: React.FC = () => {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-lg font-serif font-semibold text-brown-900">
+                      <h3 className="text-lg font-serif font-semibold text-brown-900 select-none">
                         Welcome back, {currentUser.username}!
                       </h3>
                       <p className="text-brown-600 font-body text-sm">
@@ -120,7 +120,7 @@ const HomePage: React.FC = () => {
                   </div>
                   <button
                     onClick={handleNewAnalysis}
-                    className="text-sm text-primary hover:text-primary-hover font-semibold transition-colors"
+                    className="text-sm text-primary hover:text-primary-hover font-semibold transition-colors cursor-pointer select-none"
                   >
                     Update Survey
                   </button>
@@ -221,13 +221,13 @@ const HomePage: React.FC = () => {
                   <div className="flex space-x-3">
                     <button
                       onClick={handleReset}
-                      className="px-4 py-2 border border-nude-300 text-brown-700 rounded-lg hover:border-primary hover:text-primary transition-all duration-200"
+                      className="px-4 py-2 border border-nude-300 text-brown-700 rounded-lg hover:border-primary hover:text-primary transition-all duration-200 cursor-pointer select-none"
                     >
                       New Photo
                     </button>
                     <button
                       onClick={handleNewAnalysis}
-                      className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all duration-200"
+                      className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-semibold transition-all duration-200 cursor-pointer select-none"
                     >
                       New Analysis
                     </button>

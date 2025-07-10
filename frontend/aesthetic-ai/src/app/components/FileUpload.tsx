@@ -63,13 +63,13 @@ export default function FileUpload({
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <button
           onClick={handleChooseClick}
-          className="flex-1 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-full font-body font-semibold transition-colors duration-200 shadow-sm"
+          className="flex-1 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-full font-body font-semibold transition-colors duration-200 shadow-sm cursor-pointer select-none"
         >
           Choose File
         </button>
         <button
           onClick={onCameraClick}
-          className="flex-1 border-2 border-primary text-primary hover:bg-primary-hover hover:text-white hover:border-primary-hover px-6 py-3 rounded-full font-body font-semibold transition-all duration-200"
+          className="flex-1 border-2 border-primary text-primary hover:bg-primary-hover hover:text-white hover:border-primary-hover px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 cursor-pointer select-none"
         >
           Use Camera
         </button>

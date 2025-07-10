@@ -247,7 +247,7 @@ export default function CameraCapture({
         <button
           onClick={handleCapturePhoto}
           disabled={isLoading}
-          className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none"
         >
           <span className="flex items-center justify-center">
             <svg
@@ -273,7 +273,10 @@ export default function CameraCapture({
           </span>
         </button>
 
-        <button onClick={onCancel} className="btn-secondary sm:w-auto">
+        <button
+          onClick={onCancel}
+          className="btn-secondary sm:w-auto cursor-pointer select-none"
+        >
           <span className="flex items-center justify-center">
             <svg
               className="w-4 h-4 mr-2"

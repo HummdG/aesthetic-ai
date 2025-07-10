@@ -49,7 +49,7 @@ export default function PhotoPreview({
         <button
           onClick={onAnalyze}
           disabled={isAnalyzing}
-          className="flex-1 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 shadow-sm flex items-center justify-center"
+          className="flex-1 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 shadow-sm flex items-center justify-center select-none"
         >
           {isAnalyzing && (
             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
@@ -59,7 +59,7 @@ export default function PhotoPreview({
 
         <button
           onClick={onReset}
-          className="sm:w-auto border-2 border-nude-300 hover:border-primary text-brown-700 hover:text-primary px-6 py-3 rounded-full font-body font-semibold transition-all duration-200"
+          className="sm:w-auto border-2 border-nude-300 hover:border-primary text-brown-700 hover:text-primary px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 cursor-pointer select-none"
         >
           New Image
         </button>

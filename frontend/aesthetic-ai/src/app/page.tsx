@@ -10,6 +10,7 @@ import { UserSurveyData } from "./types/userSurvey";
 import { useAuth } from "./contexts/AuthContext";
 import { apiService } from "./services/api";
 import { analyzeSkinWithSurvey } from "./utils/analysisHelper";
+import { useEmailVerificationGuard } from "./hooks/useEmailVerificationGuard";
 
 // Application states
 type AppState = "survey" | "upload" | "analysis" | "results";
@@ -24,6 +25,7 @@ const HomePage: React.FC = () => {
   );
 
   const { user, getAuthToken } = useAuth();
+  const { canAccess, requiresVerification } = useEmailVerificationGuard();
 
   // Reset app state when user logs out
   useEffect(() => {
@@ -34,6 +36,10 @@ const HomePage: React.FC = () => {
       setError(null);
     }
   }, [user, appState]);
+
+  // Check email verification status for authenticated users
+  // Only redirect to verification screen when user tries to access protected features
+  // Don't automatically redirect on signup (that's handled in the modal)
 
   // Define currentUser as the survey data when available
   const currentUser = currentSurvey;
@@ -55,14 +61,17 @@ const HomePage: React.FC = () => {
 
   // Handle analysis start
   const handleAnalysisStart = async (file: File) => {
+    // Email verification is handled in the signup/auth modal flow
+    // Users who need verification won't reach this point through normal flow
+
     setIsAnalyzing(true);
     setError(null);
     setAnalysis(null);
     setAppState("analysis");
 
     try {
-      // Get auth token if user is authenticated
-      const token = user ? await getAuthToken() : undefined;
+      // Get auth token if user is authenticated and verified
+      const token = user && canAccess ? await getAuthToken() : undefined;
 
       // Use the enhanced analysis function that includes survey data
       const result = await analyzeSkinWithSurvey(

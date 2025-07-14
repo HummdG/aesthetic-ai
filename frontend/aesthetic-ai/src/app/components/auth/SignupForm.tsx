@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../ui/Button";
+import { validateEmail } from "../../utils/emailValidation";
+import EmailVerification from "./EmailVerification";
 
 interface SignupFormProps {
   onSuccess?: () => void;
@@ -19,13 +21,38 @@ const SignupForm: React.FC<SignupFormProps> = ({
   const [displayName, setDisplayName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const [showVerification, setShowVerification] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
 
   const { signup } = useAuth();
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+
+    // Validate email as user types
+    if (newEmail) {
+      const validation = validateEmail(newEmail);
+      setEmailError(validation.isValid ? null : validation.error || null);
+    } else {
+      setEmailError(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    // Final email validation
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || "Please enter a valid email address");
+      setIsLoading(false);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -41,13 +68,35 @@ const SignupForm: React.FC<SignupFormProps> = ({
 
     try {
       await signup(email, password, displayName);
-      onSuccess?.();
+      setSignupEmail(email);
+      setShowVerification(true);
     } catch (error: any) {
       setError(error.message || "Signup failed");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleVerificationComplete = () => {
+    setShowVerification(false);
+    onSuccess?.();
+  };
+
+  const handleBackToLogin = () => {
+    setShowVerification(false);
+    onSwitchToLogin?.();
+  };
+
+  // Show email verification component after successful signup
+  if (showVerification) {
+    return (
+      <EmailVerification
+        userEmail={signupEmail}
+        onVerificationComplete={handleVerificationComplete}
+        onBack={handleBackToLogin}
+      />
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -97,11 +146,18 @@ const SignupForm: React.FC<SignupFormProps> = ({
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               required
-              className="w-full px-3 py-2 border border-nude-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
+                emailError
+                  ? "border-red-300 focus:ring-red-500"
+                  : "border-nude-300 focus:ring-primary"
+              }`}
               placeholder="Enter your email"
             />
+            {emailError && (
+              <p className="mt-1 text-sm text-red-600">{emailError}</p>
+            )}
           </div>
 
           <div>

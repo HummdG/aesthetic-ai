@@ -9,12 +9,14 @@ import {
   signOut,
   updateProfile,
   sendEmailVerification,
+  reload,
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  emailVerified: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (
     email: string,
@@ -24,6 +26,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUserProfile: (displayName: string) => Promise<void>;
   getAuthToken: () => Promise<string | null>;
+  sendVerificationEmail: () => Promise<void>;
+  checkEmailVerification: () => Promise<boolean>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,10 +48,12 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      setEmailVerified(user?.emailVerified || false);
       setLoading(false);
     });
 
@@ -115,14 +122,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const sendVerificationEmail = async () => {
+    if (!user) throw new Error("No user logged in");
+
+    try {
+      await sendEmailVerification(user);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const checkEmailVerification = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      await reload(user);
+      const isVerified = user.emailVerified;
+      setEmailVerified(isVerified);
+      return isVerified;
+    } catch (error) {
+      console.error("Error checking email verification:", error);
+      return false;
+    }
+  };
+
+  const refreshUser = async () => {
+    if (!user) return;
+
+    try {
+      await reload(user);
+      setEmailVerified(user.emailVerified);
+    } catch (error) {
+      console.error("Error refreshing user:", error);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     loading,
+    emailVerified,
     login,
     signup,
     logout,
     updateUserProfile,
     getAuthToken,
+    sendVerificationEmail,
+    checkEmailVerification,
+    refreshUser,
   };
 
   return (

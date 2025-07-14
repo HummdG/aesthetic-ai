@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 
@@ -16,6 +16,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = "login",
 }) => {
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
+
+  // Sync mode with initialMode when modal opens or initialMode changes
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 

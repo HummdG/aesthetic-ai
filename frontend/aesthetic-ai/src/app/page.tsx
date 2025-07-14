@@ -25,6 +25,16 @@ const HomePage: React.FC = () => {
 
   const { user, getAuthToken } = useAuth();
 
+  // Reset app state when user logs out
+  useEffect(() => {
+    if (!user && appState !== "survey") {
+      setAppState("survey");
+      setCurrentSurvey(null);
+      setAnalysis(null);
+      setError(null);
+    }
+  }, [user, appState]);
+
   // Define currentUser as the survey data when available
   const currentUser = currentSurvey;
 

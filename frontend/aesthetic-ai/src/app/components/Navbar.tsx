@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAuth } from "../contexts/AuthContext";
 import AuthModal from "./auth/AuthModal";
 import { Button } from "./ui/Button";
@@ -22,14 +23,24 @@ export default function Navbar() {
     <nav className="sticky top-0 w-full bg-white border-b border-nude-200 z-50">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Simple Logo */}
+          {/* Logo */}
           <div className="flex items-center">
-            <span className="text-xl font-serif font-medium text-brown-900">
-              Aesthetic AI
-            </span>
-            <span className="ml-3 text-sm font-body text-brown-600 italic">
-              Advanced Beauty Analysis
-            </span>
+            <Image
+              src="/logo.png"
+              alt="Aesthetic AI"
+              width={180}
+              height={40}
+              className="h-10 w-auto"
+              priority
+            />
+            <div className="ml-4">
+              <span className="text-xl font-serif font-medium text-brown-900">
+                Aesthetic AI
+              </span>
+              <span className="ml-3 text-sm font-body text-brown-600 italic">
+                Advanced Beauty Analysis
+              </span>
+            </div>
           </div>
 
           {/* Desktop Navigation */}
@@ -49,7 +60,7 @@ export default function Navbar() {
               {user ? (
                 <>
                   <span className="text-brown-700 font-body text-sm">
-                    Welcome, {user.displayName || user.email}
+                    Welcome, {user.displayName}
                   </span>
                   <Button onClick={() => logout()} variant="outline" size="sm">
                     Logout

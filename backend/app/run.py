@@ -15,39 +15,41 @@ def main():
     try:
         # Import settings first
         from app.config import settings
+        from app.auth.firebase_auth import initialize_firebase
         
         logger.info(f"🚀 Starting {settings.APP_TITLE}...")
+        logger.info(f"🌍 Environment: {settings.ENVIRONMENT}")
         logger.info(f"🌐 Server will be available at: http://{settings.HOST}:{settings.PORT}")
         logger.info(f"📖 API documentation: http://{settings.HOST}:{settings.PORT}/docs")
         logger.info(f"🔍 Health check: http://{settings.HOST}:{settings.PORT}/health")
         
-        # Run uvicorn with the correct module path
-        uvicorn.run(
-            "app.main:app",  # This tells uvicorn to import app from app/main.py
-            host="0.0.0.0",  # Changed to 0.0.0.0 for Docker
-            port=8000,       # Fixed port for Docker
-            log_level="info",
-            reload=True      # Enable auto-reload for development
-        )
+        # Initialize Firebase before starting the server
+        try:
+            initialize_firebase()
+        except Exception as e:
+            logger.warning(f"⚠️ Firebase initialization failed: {e}")
+            if settings.is_production:
+                logger.error("❌ Firebase is required in production")
+                sys.exit(1)
+        
+        # Run uvicorn with production-ready settings
+        uvicorn_config = {
+            "app": "app.main:app",
+            "host": settings.HOST,
+            "port": settings.PORT,
+            "log_level": "info",
+        }
+        
+        # Add development-specific settings
+        if not settings.is_production:
+            uvicorn_config["reload"] = True
+        
+        uvicorn.run(**uvicorn_config)
         
     except ImportError as e:
         logger.error(f"❌ Import error: {e}")
         logger.error("Make sure all dependencies are installed and the app structure is correct")
-        
-        # Try to run with direct import as fallback
-        try:
-            logger.info("🔄 Trying direct import fallback...")
-            from app.main import app
-            uvicorn.run(
-                app,
-                host="0.0.0.0",
-                port=8000,
-                log_level="info",
-                reload=True
-            )
-        except Exception as fallback_error:
-            logger.error(f"❌ Fallback also failed: {fallback_error}")
-            sys.exit(1)
+        sys.exit(1)
             
     except Exception as e:
         logger.error(f"❌ Failed to start application: {e}")

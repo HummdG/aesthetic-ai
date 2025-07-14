@@ -14,6 +14,9 @@ import { UserCheckStep } from "./survey/steps/UserCheckStep";
 import { BasicInfoStep } from "./survey/steps/BasicInfoStep";
 import { MedicalHistoryStep } from "./survey/steps/MedicalHistoryStep";
 import { SkinTreatmentStep } from "./survey/steps/SkinTreatmentStep";
+import { useAuth } from "../contexts/AuthContext";
+import { apiService } from "../services/api";
+import AuthModal from "./auth/AuthModal";
 
 interface UserSurveyFormProps {
   onComplete: (data: UserSurveyData) => void;
@@ -28,6 +31,12 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [username, setUsername] = useState("");
   const [existingData, setExistingData] = useState<UserSurveyData | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { user, getAuthToken } = useAuth();
 
   // Form data state
   const [formData, setFormData] = useState<
@@ -95,88 +104,139 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
   // Survey steps configuration
   const steps: SurveyStep[] = [
     {
-      id: "user-check",
-      title: "Welcome",
-      subtitle: "Let's get to know you",
-      icon: <UserIcon />,
-      isCompleted: currentStep > 0,
-      isActive: currentStep === 0,
-    },
-    {
       id: "basic-info",
       title: "Basic Information",
       subtitle: "Personal details for analysis",
       icon: <InfoIcon />,
-      isCompleted: currentStep > 1,
-      isActive: currentStep === 1,
+      isCompleted: currentStep > 0,
+      isActive: currentStep === 0,
     },
     {
       id: "medical-history",
       title: "Medical History",
       subtitle: "Health information for safer recommendations",
       icon: <MedicalIcon />,
-      isCompleted: currentStep > 2,
-      isActive: currentStep === 2,
+      isCompleted: currentStep > 1,
+      isActive: currentStep === 1,
     },
     {
       id: "skin-treatment",
       title: "Skin & Treatment",
       subtitle: "Your skincare experience",
       icon: <SkinIcon />,
-      isCompleted: currentStep > 3,
-      isActive: currentStep === 3,
+      isCompleted: currentStep > 2,
+      isActive: currentStep === 2,
     },
   ];
 
-  // Load existing user data
-  const loadUserData = (username: string) => {
-    const userData = localStorage.getItem(`skinAnalysis_${username}`);
-    if (userData) {
-      try {
-        const parsedData: UserSurveyData = JSON.parse(userData);
-        setExistingData(parsedData);
-        setFormData(parsedData);
-        return true;
-      } catch (e) {
-        console.error("Error parsing user data:", e);
+  // Load existing user survey data with retry logic
+  const loadUserSurvey = async (retryCount = 0) => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      const token = await getAuthToken();
+      if (!token) {
+        console.log("No auth token available");
+        return;
       }
-    }
-    return false;
-  };
 
-  // Save user data
-  const saveUserData = (data: UserSurveyData) => {
-    localStorage.setItem(`skinAnalysis_${data.username}`, JSON.stringify(data));
-  };
+      console.log("🔑 Auth token generated:", {
+        tokenLength: token.length,
+        tokenPreview: token.substring(0, 20) + "...",
+        userEmail: user?.email,
+        userId: user?.uid,
+        emailVerified: user?.emailVerified,
+        attempt: retryCount + 1,
+        timestamp: new Date().toISOString(),
+      });
 
-  // Handle username submission
-  const handleUsernameSubmit = () => {
-    if (username.trim()) {
-      const userExists = loadUserData(username.trim());
-      if (userExists) {
+      const latestSurvey = await apiService.getLatestSurvey(token);
+      if (
+        latestSurvey &&
+        typeof latestSurvey === "object" &&
+        latestSurvey !== null &&
+        "survey_data" in latestSurvey
+      ) {
+        const surveyData = (latestSurvey as any).survey_data as UserSurveyData;
+        setExistingData(surveyData);
+        setFormData(surveyData);
         setIsReturningUser(true);
-        // Skip to completion with existing data
-        const completeData: UserSurveyData = {
-          ...existingData!,
-          completedAt: new Date().toISOString(),
-          version: "1.0",
-        };
-        onComplete(completeData);
-      } else {
-        setFormData((prev) => ({ ...prev, username: username.trim() }));
-        setCurrentStep(1);
       }
+    } catch (error) {
+      console.error(
+        `Error loading user survey (attempt ${retryCount + 1}):`,
+        error
+      );
+
+      // If it's a token authentication error and we haven't retried yet, try again
+      if (
+        error instanceof Error &&
+        error.message.includes("Invalid authentication token") &&
+        retryCount < 2
+      ) {
+        console.log(`🔄 Retrying in 2 seconds... (attempt ${retryCount + 2})`);
+        setTimeout(() => {
+          loadUserSurvey(retryCount + 1);
+        }, 2000);
+        return;
+      }
+
+      // Don't show error to user for missing survey - it's normal for new users
+      if (error instanceof Error && !error.message.includes("not found")) {
+        setError(`Failed to load survey data: ${error.message}`);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Save user survey data
+  const saveUserSurvey = async (data: UserSurveyData) => {
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      const token = await getAuthToken();
+      if (!token) return;
+
+      await apiService.createSurvey(token, data);
+    } catch (error) {
+      console.error("Error saving user survey:", error);
+      setError("Failed to save survey data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check if user is authenticated and load survey data
+  useEffect(() => {
+    if (user) {
+      // Add a longer delay to ensure Firebase token is fully ready
+      const timer = setTimeout(() => {
+        loadUserSurvey();
+      }, 2000); // Increased from 500ms to 2000ms
+
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   // Handle form completion
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (!user) {
+      setAuthMode("login");
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     const completeData: UserSurveyData = {
       ...formData,
+      username: user.displayName || user.email || "User",
       completedAt: new Date().toISOString(),
       version: "1.0",
     };
-    saveUserData(completeData);
+
+    await saveUserSurvey(completeData);
     onComplete(completeData);
   };
 
@@ -244,49 +304,88 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
 
         {/* Form Content */}
         <div className="bg-white rounded-xl shadow-elegant p-4 sm:p-8 mb-4 sm:mb-6">
-          {currentStep === 0 && (
-            <UserCheckStep
-              username={username}
-              setUsername={setUsername}
-              handleUsernameSubmit={handleUsernameSubmit}
-            />
+          {!user && (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-primary to-brown-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserIcon className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-serif font-semibold text-brown-900 mb-2">
+                Sign in to continue
+              </h3>
+              <p className="text-brown-600 font-body mb-6">
+                Please sign in to access your personalized skin analysis survey
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setAuthMode("login");
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="px-6 py-3 border border-primary text-primary hover:bg-primary hover:text-white rounded-lg font-semibold transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthMode("signup");
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="px-6 py-3 bg-primary text-white hover:bg-primary-hover rounded-lg font-semibold transition-colors"
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
           )}
 
-          {currentStep === 1 && (
-            <BasicInfoStep
-              formData={formData.basicInfo}
-              handleFieldChange={handleFieldChange}
-              handleMultiSelect={handleMultiSelect}
-            />
-          )}
+          {user && (
+            <>
+              {currentStep === 0 && (
+                <BasicInfoStep
+                  formData={formData.basicInfo}
+                  handleFieldChange={handleFieldChange}
+                  handleMultiSelect={handleMultiSelect}
+                />
+              )}
 
-          {currentStep === 2 && (
-            <MedicalHistoryStep
-              formData={formData.medicalHistory}
-              handleFieldChange={handleFieldChange}
-              handleMultiSelect={handleMultiSelect}
-            />
-          )}
+              {currentStep === 1 && (
+                <MedicalHistoryStep
+                  formData={formData.medicalHistory}
+                  handleFieldChange={handleFieldChange}
+                  handleMultiSelect={handleMultiSelect}
+                />
+              )}
 
-          {currentStep === 3 && (
-            <SkinTreatmentStep
-              formData={formData.skinInfo}
-              handleFieldChange={handleFieldChange}
-              handleMultiSelect={handleMultiSelect}
-            />
+              {currentStep === 2 && (
+                <SkinTreatmentStep
+                  formData={formData.skinInfo}
+                  handleFieldChange={handleFieldChange}
+                  handleMultiSelect={handleMultiSelect}
+                />
+              )}
+            </>
           )}
         </div>
 
         {/* Navigation */}
-        <Navigation
-          currentStep={currentStep}
-          stepsLength={steps.length}
-          onPrevious={handlePreviousStep}
-          onNext={handleNextStep}
-          onSkip={onSkip}
-          onComplete={handleComplete}
-        />
+        {user && (
+          <Navigation
+            currentStep={currentStep}
+            stepsLength={steps.length}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+            onSkip={onSkip}
+            onComplete={handleComplete}
+          />
+        )}
       </div>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </div>
   );
 };

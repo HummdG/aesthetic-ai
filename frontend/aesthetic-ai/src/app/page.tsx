@@ -7,7 +7,8 @@ import UploadSection from "./components/UploadSection";
 import SkinAnalysisResults from "./components/SkinAnalysisResults";
 import { SkinAnalysisResult } from "./types/skinAnalysis";
 import { UserSurveyData } from "./types/userSurvey";
-import { useUserSurvey } from "./hooks/useUserSurvey";
+import { useAuth } from "./contexts/AuthContext";
+import { apiService } from "./services/api";
 import { analyzeSkinWithSurvey } from "./utils/analysisHelper";
 
 // Application states
@@ -18,13 +19,19 @@ const HomePage: React.FC = () => {
   const [analysis, setAnalysis] = useState<SkinAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentSurvey, setCurrentSurvey] = useState<UserSurveyData | null>(
+    null
+  );
 
-  const { currentUser, saveUser, loadUser, checkUserExists } = useUserSurvey();
+  const { user, getAuthToken } = useAuth();
+
+  // Define currentUser as the survey data when available
+  const currentUser = currentSurvey;
 
   // Handle survey completion
   const handleSurveyComplete = async (userData: UserSurveyData) => {
     try {
-      await saveUser(userData);
+      setCurrentSurvey(userData);
       setAppState("upload");
     } catch (err) {
       setError("Failed to save survey data");
@@ -44,8 +51,15 @@ const HomePage: React.FC = () => {
     setAppState("analysis");
 
     try {
+      // Get auth token if user is authenticated
+      const token = user ? await getAuthToken() : undefined;
+
       // Use the enhanced analysis function that includes survey data
-      const result = await analyzeSkinWithSurvey(file, currentUser);
+      const result = await analyzeSkinWithSurvey(
+        file,
+        currentSurvey || undefined,
+        token || undefined
+      );
       setAnalysis(result);
       setAppState("results");
     } catch (err) {

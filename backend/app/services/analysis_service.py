@@ -4,7 +4,7 @@ Analysis service for orchestrating skin condition analysis workflow
 import base64
 import random
 import logging
-from typing import BinaryIO
+from typing import BinaryIO, Optional, Dict, Any
 from fastapi import HTTPException, UploadFile
 
 from app.models.schemas import SkinAnalysisResponse
@@ -81,12 +81,17 @@ class AnalysisService:
                 detail=f"Failed to process image: {str(e)}"
             )
     
-    async def analyze_skin_image(self, file: UploadFile) -> SkinAnalysisResponse:
+    async def analyze_skin_image(
+        self, 
+        file: UploadFile, 
+        survey_data: Optional[Dict[str, Any]] = None
+    ) -> SkinAnalysisResponse:
         """
-        Perform complete skin condition analysis workflow
+        Perform complete skin condition analysis workflow with optional survey data
         
         Args:
             file: FastAPI UploadFile object
+            survey_data: Optional user survey data for personalization
             
         Returns:
             SkinAnalysisResponse with skin condition and ingredient recommendations
@@ -97,7 +102,8 @@ class AnalysisService:
         analysis_id = random.randint(1000, 9999)
         
         logger.info(f"🔬 Starting skin analysis {analysis_id} - File: {file.filename}, "
-                   f"Size: {file.size}, Type: {file.content_type}")
+                   f"Size: {file.size}, Type: {file.content_type}, "
+                   f"Personalized: {'Yes' if survey_data else 'No'}")
         
         # Validate file
         self.validate_upload_file(file)
@@ -113,8 +119,12 @@ class AnalysisService:
             # Encode image
             base64_image = await self.encode_image_to_base64(file)
             
-            # Get LLM analysis
-            llm_response = await self.llm_service.analyze_skin_image(base64_image, analysis_id)
+            # Get LLM analysis with survey data
+            llm_response = await self.llm_service.analyze_skin_image(
+                base64_image, 
+                analysis_id, 
+                survey_data
+            )
             
             # Parse response
             analysis_response = parse_skin_analysis_response(llm_response)
@@ -136,6 +146,19 @@ class AnalysisService:
                 detail=f"Analysis failed: {str(e)}"
             )
     
+    # Legacy method for backward compatibility
+    async def analyze_skin_image_basic(self, file: UploadFile) -> SkinAnalysisResponse:
+        """
+        Perform basic skin analysis without survey data (for backward compatibility)
+        
+        Args:
+            file: FastAPI UploadFile object
+            
+        Returns:
+            SkinAnalysisResponse with basic skin condition and ingredient recommendations
+        """
+        return await self.analyze_skin_image(file, None)
+    
     def get_service_status(self) -> dict:
         """
         Get comprehensive service status
@@ -150,6 +173,7 @@ class AnalysisService:
             "llm_service": llm_status,
             "supported_formats": settings.ALLOWED_CONTENT_TYPES,
             "max_file_size_mb": settings.MAX_FILE_SIZE / (1024 * 1024),
+            "features": ["basic_analysis", "enhanced_analysis", "survey_integration"],
             "skin_conditions": [
                 "Normal skin",
                 "Oily skin", 

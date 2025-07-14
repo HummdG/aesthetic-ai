@@ -12,9 +12,13 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - PYTHONPATH=/app
       - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://aesthetic_user:defaultpassword@postgres:5432/aesthetic_db
+      - FIREBASE_ADMIN_SDK_PATH=/app/firebase-admin-sdk.json
     volumes:
       # Mount source code for development hot-reload
       - ./backend:/app
+      # Mount Firebase Admin SDK key (you'll need to add this file)
+      - ./firebase-admin-sdk.json:/app/firebase-admin-sdk.json:ro
       # Exclude node_modules and __pycache__ for performance
       - /app/__pycache__
       - /app/.pytest_cache
@@ -27,6 +31,29 @@ services:
       start_period: 10s
     networks:
       - aesthetic_network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: aesthetic_postgres
+    environment:
+      POSTGRES_DB: aesthetic_db
+      POSTGRES_USER: aesthetic_user
+      POSTGRES_PASSWORD: defaultpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - aesthetic_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aesthetic_user -d aesthetic_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Optional: Add Redis for caching (future enhancement)
   # redis:
@@ -38,25 +65,9 @@ services:
   #   networks:
   #     - aesthetic_network
 
-  # Optional: Add database (future enhancement)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   container_name: aesthetic_postgres
-  #   environment:
-  #     POSTGRES_DB: aesthetic_db
-  #     POSTGRES_USER: aesthetic_user
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-defaultpassword}
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
-  #   networks:
-  #     - aesthetic_network
-
 networks:
   aesthetic_network:
     driver: bridge
 
-# volumes:
-#   postgres_data:
+volumes:
+  postgres_data:

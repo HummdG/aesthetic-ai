@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import AuthModal from "./auth/AuthModal";
+import { Button } from "./ui/Button";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { name: "Home", href: "#" },
@@ -37,6 +43,42 @@ export default function Navbar() {
                 {link.name}
               </a>
             ))}
+
+            {/* Authentication buttons */}
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <>
+                  <span className="text-brown-700 font-body text-sm">
+                    Welcome, {user.displayName || user.email}
+                  </span>
+                  <Button onClick={() => logout()} variant="outline" size="sm">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => {
+                      setAuthMode("login");
+                      setIsAuthModalOpen(true);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setAuthMode("signup");
+                      setIsAuthModalOpen(true);
+                    }}
+                    size="sm"
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -75,9 +117,64 @@ export default function Navbar() {
                 {link.name}
               </a>
             ))}
+
+            {/* Mobile Authentication */}
+            <div className="px-4 py-2 space-y-2">
+              {user ? (
+                <>
+                  <p className="text-brown-700 font-body text-sm">
+                    Welcome, {user.displayName || user.email}
+                  </p>
+                  <Button
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => {
+                      setAuthMode("login");
+                      setIsAuthModalOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full mb-2"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setAuthMode("signup");
+                      setIsAuthModalOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    size="sm"
+                    className="w-full"
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </nav>
   );
 }

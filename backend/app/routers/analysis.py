@@ -1,176 +1,40 @@
 # backend/app/routers/analysis.py
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from typing import Optional
-import base64
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from typing import Optional, List
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from datetime import datetime
 import json
-import os
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
 
-# Import your existing schemas - FIXED: Use two dots instead of three
-try:
-    from ..models.schemas import SkinAnalysisResponse, IngredientRecommendation
-except ImportError:
-    # Fallback if schemas don't exist
-    from pydantic import BaseModel, Field
-    from typing import List
-    
-    class IngredientRecommendation(BaseModel):
-        ingredient: str = Field(..., description="Name of the recommended skincare ingredient")
-        purpose: str = Field(..., description="What this ingredient does for the skin condition")
-        concentration: Optional[str] = Field(None, description="Recommended concentration range")
-        application: str = Field(..., description="How to apply this ingredient")
-        benefits: str = Field(..., description="Key benefits for the detected skin condition")
-
-    class SkinAnalysisResponse(BaseModel):
-        confidence: int = Field(..., ge=1, le=100, description="Confidence percentage (1-100)")
-        primaryCondition: str = Field(..., description="Primary detected skin condition")
-        secondaryConditions: List[str] = Field(default=[], description="Additional skin concerns detected")
-        skinType: str = Field(..., description="Overall skin type classification")
-        ingredientRecommendations: List[IngredientRecommendation] = Field(..., description="List of ingredient recommendations")
-        description: str = Field(..., description="Detailed description of the skin analysis")
+# Import unified services and schemas
+from ..services.analysis_service import analysis_service
+from ..services.database_service import DatabaseService
+from ..models.schemas import SkinAnalysisResponse
+from ..models import get_db, User, SkinAnalysis
+from ..auth import get_current_user_from_token, get_current_user_optional
 
 router = APIRouter()
 
-class EnhancedSkinAnalysisService:
-    """Enhanced skin analysis service that incorporates user survey data"""
+# Pydantic models for response
+class AnalysisHistoryResponse(BaseModel):
+    id: str
+    user_id: str
+    analysis_data: dict
+    created_at: datetime
+    survey_id: Optional[str]
     
-    def __init__(self, openai_api_key: str):
-        self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            api_key=openai_api_key,
-            temperature=0.3,
-            max_tokens=2000
-        )
-    
-    def analyze_skin_with_survey(
-        self, 
-        image_base64: str, 
-        user_context: Optional[str] = None
-    ) -> SkinAnalysisResponse:
-        """Analyze skin image with optional survey data for personalization"""
-        
-        # Create enhanced system prompt
-        system_prompt = self._create_enhanced_system_prompt(user_context)
-        
-        # Create user message with image
-        user_message = HumanMessage(
-            content=[
-                {
-                    "type": "text",
-                    "text": self._create_analysis_prompt(user_context)
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{image_base64}"
-                    }
-                }
-            ]
-        )
-        
-        # Get LLM response
-        response = self.llm.invoke([
-            SystemMessage(content=system_prompt),
-            user_message
-        ])
-        
-        # Parse response
-        try:
-            result = json.loads(response.content)
-            return SkinAnalysisResponse(**result)
-        except json.JSONDecodeError:
-            # Fallback parsing if JSON is malformed
-            return self._parse_fallback_response(response.content, user_context)
-    
-    def _create_enhanced_system_prompt(self, user_context: Optional[str]) -> str:
-        """Create enhanced system prompt including survey data"""
-        base_prompt = """You are an expert dermatologist and skincare specialist. Analyze the provided facial image and provide detailed skin condition assessment with personalized ingredient recommendations.
-
-Your analysis should be professional, accurate, and evidence-based. Consider both what you see in the image and the user's personal information provided.
-
-IMPORTANT GUIDELINES:
-1. Always prioritize safety based on user's medical history
-2. Consider user's age, skin type, and experience level
-3. Provide specific, actionable recommendations
-4. Include concentration ranges and application instructions
-5. Warn about potential interactions or contraindications
-
-Response Format: Return valid JSON with the following structure:
-{
-    "confidence": <1-100>,
-    "primaryCondition": "<main condition>",
-    "secondaryConditions": ["<condition1>", "<condition2>"],
-    "skinType": "<skin type>",
-    "ingredientRecommendations": [
-        {
-            "ingredient": "<ingredient name>",
-            "purpose": "<what it does>",
-            "concentration": "<recommended %>",
-            "application": "<how to use>",
-            "benefits": "<specific benefits>"
-        }
-    ],
-    "description": "<detailed analysis>"
-}"""
-        
-        if user_context:
-            base_prompt += f"""
-
-USER PROFILE:
-{user_context}
-
-PERSONALIZATION INSTRUCTIONS:
-- Tailor recommendations based on user's experience level
-- Consider medical history and allergies
-- Adjust complexity based on age and skin type
-- Include specific safety warnings where relevant
-- If user is pregnant/nursing, only recommend pregnancy-safe ingredients"""
-        
-        return base_prompt
-    
-    def _create_analysis_prompt(self, user_context: Optional[str]) -> str:
-        """Create analysis prompt with survey context"""
-        base_prompt = "Please analyze this facial image for skin conditions and provide personalized skincare recommendations."
-        
-        if user_context:
-            base_prompt += f"""
-
-This analysis is personalized based on the user's profile. Please provide recommendations that consider their:
-- Medical history and allergies
-- Current skin type and concerns
-- Age and experience level
-- Special considerations (pregnancy, medical conditions, etc.)
-
-Ensure all recommendations are safe and appropriate for this specific user."""
-        
-        return base_prompt
-    
-    def _parse_fallback_response(self, content: str, user_context: Optional[str]) -> SkinAnalysisResponse:
-        """Fallback parsing if JSON parsing fails"""
-        return SkinAnalysisResponse(
-            confidence=85,
-            primaryCondition="Analysis completed successfully",
-            secondaryConditions=[],
-            skinType="normal",
-            ingredientRecommendations=[
-                IngredientRecommendation(
-                    ingredient="Gentle Cleanser",
-                    purpose="Basic cleansing",
-                    concentration="N/A",
-                    application="Daily, morning and evening",
-                    benefits="Removes impurities without irritation"
-                )
-            ],
-            description="Skin analysis completed. Recommendations provided based on image analysis" + 
-                       (" and your personal profile." if user_context else ".")
-        )
+    class Config:
+        from_attributes = True
 
 @router.post("/analyze/skin", response_model=SkinAnalysisResponse)
 async def analyze_skin_with_survey(
     file: UploadFile = File(...),
     userContext: Optional[str] = Form(None),
-    username: Optional[str] = Form(None)
+    safetyWarnings: Optional[str] = Form(None),
+    ageRecommendations: Optional[str] = Form(None),
+    username: Optional[str] = Form(None),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
 ):
     """Enhanced skin analysis endpoint that accepts survey data"""
     
@@ -179,26 +43,98 @@ async def analyze_skin_with_survey(
         raise HTTPException(status_code=400, detail="File must be an image")
     
     try:
-        # Read image data
-        image_data = await file.read()
+        db_service = DatabaseService(db)
         
-        # Encode to base64
-        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        # Parse survey data if provided
+        survey_data = None
+        if userContext:
+            survey_data = {
+                'userContext': userContext,
+                'safetyWarnings': json.loads(safetyWarnings) if safetyWarnings else [],
+                'ageRecommendations': json.loads(ageRecommendations) if ageRecommendations else [],
+                'username': username or (current_user.display_name if current_user else 'User')
+            }
         
-        # Get OpenAI API key
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+        # Perform analysis using unified service
+        result = await analysis_service.analyze_skin_image(file, survey_data)
         
-        # Initialize analysis service
-        analysis_service = EnhancedSkinAnalysisService(openai_api_key)
-        
-        # Perform analysis
-        result = analysis_service.analyze_skin_with_survey(
-            image_base64, userContext
-        )
+        # Save analysis to database if user is authenticated
+        if current_user:
+            # Get latest survey for context
+            latest_survey = db_service.get_latest_user_survey(str(current_user.id))
+            survey_id = str(latest_survey.id) if latest_survey else None
+            
+            # Save analysis
+            db_service.create_skin_analysis(
+                user_id=str(current_user.id),
+                analysis_data=result.dict(),
+                survey_id=survey_id
+            )
         
         return result
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@router.post("/analyze/skin/basic", response_model=SkinAnalysisResponse)
+async def analyze_skin_basic(
+    file: UploadFile = File(...)
+):
+    """Basic skin analysis without survey data"""
+    
+    # Validate file
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    try:
+        # Perform basic analysis using unified service
+        result = await analysis_service.analyze_skin_image_basic(file)
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+@router.get("/analyze/status")
+async def get_analysis_status():
+    """Get analysis service status"""
+    return analysis_service.get_service_status()
+
+# Analysis history endpoints
+@router.get("/analyze/history", response_model=List[AnalysisHistoryResponse])
+async def get_analysis_history(
+    current_user: User = Depends(get_current_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """Get analysis history for authenticated user"""
+    db_service = DatabaseService(db)
+    analyses = db_service.get_user_analyses(str(current_user.id))
+    return analyses
+
+@router.get("/analyze/history/{analysis_id}", response_model=AnalysisHistoryResponse)
+async def get_analysis_by_id(
+    analysis_id: str,
+    current_user: User = Depends(get_current_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """Get specific analysis by ID for authenticated user"""
+    db_service = DatabaseService(db)
+    
+    # Check if analysis belongs to current user
+    user_analyses = db_service.get_user_analyses(str(current_user.id))
+    analysis = next((a for a in user_analyses if str(a.id) == analysis_id), None)
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    
+    return analysis
+
+@router.get("/analyze/latest", response_model=Optional[AnalysisHistoryResponse])
+async def get_latest_analysis(
+    current_user: User = Depends(get_current_user_from_token),
+    db: Session = Depends(get_db)
+):
+    """Get latest analysis for authenticated user"""
+    db_service = DatabaseService(db)
+    analysis = db_service.get_latest_user_analysis(str(current_user.id))
+    return analysis

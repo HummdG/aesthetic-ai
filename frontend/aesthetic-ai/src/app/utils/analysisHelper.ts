@@ -109,35 +109,25 @@ export class AnalysisHelper {
 // Updated API call function to include survey data
 export const analyzeSkinWithSurvey = async (
   file: File, 
-  userData: UserSurveyData | null = null
+  userData: UserSurveyData | null = null,
+  authToken?: string
 ): Promise<any> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  
   // Include survey data as context
+  let surveyData;
   if (userData) {
     const context = AnalysisHelper.createAnalysisContext(userData);
     const warnings = AnalysisHelper.generateSafetyWarnings(userData);
     const ageRecommendations = AnalysisHelper.getAgeRecommendations(userData.basicInfo.age);
     
-    formData.append('userContext', context);
-    formData.append('safetyWarnings', JSON.stringify(warnings));
-    formData.append('ageRecommendations', JSON.stringify(ageRecommendations));
-    formData.append('username', userData.username);
+    surveyData = {
+      userContext: context,
+      safetyWarnings: warnings,
+      ageRecommendations: ageRecommendations,
+      username: userData.username
+    };
   }
   
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  
-  // FIX: Add the /api/v1 prefix to match backend routing
-  const response = await fetch(`${apiUrl}/api/v1/analyze/skin`, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || `HTTP ${response.status}: Analysis failed`);
-  }
-  
-  return await response.json();
+  // Use the API service
+  const { apiService } = await import('../services/api');
+  return await apiService.analyzeSkin(file, authToken, surveyData);
 };

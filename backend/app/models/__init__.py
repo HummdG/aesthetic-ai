@@ -19,6 +19,10 @@ from .survey_schemas import (
     UserSurveyData
 )
 
+# Database models
+from .database import Base, get_db, create_tables, drop_tables
+from .user import User, UserSurvey, SkinAnalysis
+
 __all__ = [
     # Core analysis models
     "IngredientRecommendation",
@@ -31,5 +35,14 @@ __all__ = [
     "UserMedicalHistory",
     "UserSkinInfo", 
     "UserBasicInfo",
-    "UserSurveyData"
+    "UserSurveyData",
+    
+    # Database models
+    "Base",
+    "get_db",
+    "create_tables",
+    "drop_tables",
+    "User",
+    "UserSurvey",
+    "SkinAnalysis"
 ]

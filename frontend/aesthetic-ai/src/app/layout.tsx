@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Crimson_Text } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -101,8 +102,10 @@ export default function RootLayout({
         className="antialiased bg-gradient-to-br from-nude-50 via-cream-100 to-nude-100 text-brown-900 font-body"
         suppressHydrationWarning={true}
       >
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
+        <AuthProvider>
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+        </AuthProvider>
       </body>
     </html>
   );

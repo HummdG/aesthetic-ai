@@ -58,6 +58,7 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
     },
     basicInfo: {
       age: 0,
+      country: "",
       isPregnant: false,
       sunExposure: "moderate",
       familyHistory: [],

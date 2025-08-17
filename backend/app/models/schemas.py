@@ -30,6 +30,7 @@ class HealthCheckResponse(BaseModel):
     model: str = Field(..., description="AI model being used")
     currency: str = Field(..., description="Currency for pricing")
     timestamp: str = Field(..., description="Current timestamp")
+    firebase: str = Field(..., description="Firebase Admin SDK status")
 
 class ErrorResponse(BaseModel):
     """Model for error responses"""

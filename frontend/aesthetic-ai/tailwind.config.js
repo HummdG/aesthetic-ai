@@ -22,113 +22,60 @@ module.exports = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: '#d4b5a0',
-          50: '#fdfcfa',
-          100: '#f9f6f2',
-          200: '#f1ebe4',
-          300: '#e8ddd4',
-          400: '#d4b5a0',
-          500: '#c29d86',
-          600: '#a67c5a',
-          700: '#8b6f47',
-          800: '#6b5238',
-          900: '#2c1810',
-          950: '#1a0f08',
-          foreground: '#fdfcfa',
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))'
         },
         secondary: {
-          DEFAULT: '#a67c5a',
-          50: '#f9f6f2',
-          100: '#f1ebe4',
-          200: '#e8ddd4',
-          300: '#d4c4b8',
-          400: '#b8a195',
-          500: '#a67c5a',
-          600: '#8b6f47',
-          700: '#6b5238',
-          800: '#4d3a2a',
-          900: '#2c1810',
-          950: '#1a0f08',
-          foreground: '#fdfcfa',
-        },
-        accent: {
-          DEFAULT: '#f4e8dc',
-          50: '#fdfcfa',
-          100: '#f9f6f2',
-          200: '#f4e8dc',
-          300: '#f1ebe4',
-          400: '#e8ddd4',
-          500: '#d4c4b8',
-          600: '#b8a195',
-          700: '#a67c5a',
-          800: '#8b6f47',
-          900: '#6b5238',
-          950: '#4d3a2a',
-          foreground: '#2c1810',
-        },
-        nude: {
-          50: '#fdfcfa',
-          100: '#f9f6f2',
-          200: '#f1ebe4',
-          300: '#e8ddd4',
-          400: '#d4c4b8',
-          500: '#d4b5a0',
-          600: '#c29d86',
-          700: '#a67c5a',
-          800: '#8b6f47',
-          900: '#6b5238',
-          950: '#2c1810',
-        },
-        cream: {
-          50: '#fdfcfa',
-          100: '#f9f6f2',
-          200: '#f4e8dc',
-          300: '#f1ebe4',
-          400: '#e8ddd4',
-          500: '#d4c4b8',
-          600: '#b8a195',
-          700: '#a67c5a',
-          800: '#8b6f47',
-          900: '#6b5238',
-        },
-        brown: {
-          50: '#f9f6f2',
-          100: '#f1ebe4',
-          200: '#e8ddd4',
-          300: '#d4c4b8',
-          400: '#b8a195',
-          500: '#a67c5a',
-          600: '#8b6f47',
-          700: '#6b5238',
-          800: '#4d3a2a',
-          900: '#2c1810',
-          950: '#1a0f08',
-        },
-        muted: {
-          DEFAULT: '#f1ebe4',
-          foreground: '#8b6f47',
-        },
-        popover: {
-          DEFAULT: '#fdfcfa',
-          foreground: '#2c1810',
-        },
-        card: {
-          DEFAULT: '#fdfcfa',
-          foreground: '#2c1810',
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))'
         },
         destructive: {
-          DEFAULT: '#b8826d',
-          foreground: '#fdfcfa',
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))'
         },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))'
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))'
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))'
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))'
+        },
+        cream: 'hsl(var(--cream))',
+        'nude-pink': 'hsl(var(--nude-pink))',
+        'soft-taupe': 'hsl(var(--soft-taupe))',
+        'rose-nude': 'hsl(var(--rose-nude))',
+        'champagne': 'hsl(var(--champagne))',
+        'warm-gray': 'hsl(var(--warm-gray))',
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))'
+        }
       },
       borderRadius: {
-        lg: '12px',
-        md: '8px',
-        sm: '6px',
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)'
       },
       fontFamily: {
+        'playfair': ['Playfair Display', 'serif'],
+        'inter': ['Inter', 'sans-serif'],
         serif: ['Playfair Display', 'Georgia', 'serif'],
-        body: ['Crimson Text', 'Georgia', 'serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
@@ -149,6 +96,9 @@ module.exports = {
         '128': '32rem',
       },
       boxShadow: {
+        'luxury': 'var(--luxury-shadow)',
+        'glow': 'var(--subtle-glow)',
+        'deep': 'var(--deep-shadow)',
         'elegant': '0 4px 16px rgba(44, 24, 16, 0.12)',
         'elegant-lg': '0 8px 32px rgba(44, 24, 16, 0.16)',
         'elegant-xl': '0 16px 48px rgba(44, 24, 16, 0.24)',
@@ -158,6 +108,8 @@ module.exports = {
         'fade-in': 'fadeIn 0.6s ease-out forwards',
         'slide-up': 'slideUp 0.4s ease-out forwards',
         'float': 'float 3s ease-in-out infinite',
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out'
       },
       keyframes: {
         fadeIn: {
@@ -172,6 +124,22 @@ module.exports = {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
         },
+        'accordion-down': {
+          from: {
+            height: '0'
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)'
+          }
+        },
+        'accordion-up': {
+          from: {
+            height: 'var(--radix-accordion-content-height)'
+          },
+          to: {
+            height: '0'
+          }
+        }
       },
       backdropBlur: {
         'elegant': '12px',

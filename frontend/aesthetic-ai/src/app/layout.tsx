@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Crimson_Text } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -11,11 +11,10 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-const crimson = Crimson_Text({
-  variable: "--font-crimson",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
+  weight: ["300", "400", "500", "600"],
   display: "swap",
 });
 
@@ -89,7 +88,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${crimson.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -99,7 +98,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className="antialiased bg-gradient-to-br from-nude-50 via-cream-100 to-nude-100 text-brown-900 font-body"
+        className="antialiased bg-background text-foreground font-inter"
         suppressHydrationWarning={true}
       >
         <AuthProvider>

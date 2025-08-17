@@ -1,21 +1,21 @@
 const ProductShowcase = () => {
   const products = [
     {
-      image: "/placeholder-product1.jpg",
+      image: "/showcase_im1.jpg",
       title: "Complete Skincare Analysis",
       description:
         "Our AI analyzes multiple skincare products to create your perfect routine",
       category: "MULTI-PRODUCT",
     },
     {
-      image: "/placeholder-product2.jpg",
+      image: "/showcase_im2.jpg",
       title: "Precision Ingredient Detection",
       description:
         "Advanced technology identifies beneficial ingredients for your skin type",
       category: "AI POWERED",
     },
     {
-      image: "/placeholder-product3.jpg",
+      image: "/showcase_im3.jpg",
       title: "Holistic Beauty Solutions",
       description:
         "From serums to tools, we analyze everything in your beauty arsenal",
@@ -56,23 +56,12 @@ const ProductShowcase = () => {
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Large featured product */}
           <div className="lg:col-span-7 group">
-            <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-deep group-hover:shadow-luxury transition-all duration-700 bg-gradient-to-br from-nude-pink/20 to-champagne/30 flex items-center justify-center">
-              <div className="text-center text-warm-gray">
-                <svg
-                  className="w-24 h-24 mx-auto mb-4 opacity-40"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <p className="font-inter text-sm">Product Showcase Image</p>
-              </div>
+            <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-deep group-hover:shadow-luxury transition-all duration-700">
+              <img
+                src={products[0].image}
+                alt={products[0].title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
 
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent"></div>
@@ -96,23 +85,12 @@ const ProductShowcase = () => {
           <div className="lg:col-span-5 space-y-8">
             {products.slice(1).map((product, index) => (
               <div key={index + 1} className="group">
-                <div className="relative h-[280px] rounded-2xl overflow-hidden shadow-luxury group-hover:shadow-deep transition-all duration-500 bg-gradient-to-br from-soft-taupe/20 to-rose-nude/30 flex items-center justify-center">
-                  <div className="text-center text-warm-gray">
-                    <svg
-                      className="w-16 h-16 mx-auto mb-2 opacity-40"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <p className="font-inter text-xs">Product Image</p>
-                  </div>
+                <div className="relative h-[280px] rounded-2xl overflow-hidden shadow-luxury group-hover:shadow-deep transition-all duration-500">
+                  <img
+                    src={product.image}
+                    alt={product.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
 
                   {/* Content overlay */}
                   <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 via-foreground/30 to-transparent flex items-end">

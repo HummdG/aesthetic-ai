@@ -1,6 +1,13 @@
 import { Button } from "../ui/Button";
+import { useRouter } from "next/navigation";
 
 const HeroSection = () => {
+  const router = useRouter();
+
+  const handleStartAnalysis = () => {
+    router.push("/analysis");
+  };
+
   return (
     <section className="relative min-h-screen overflow-hidden">
       {/* Background gradient */}
@@ -39,6 +46,7 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button
                 size="lg"
+                onClick={handleStartAnalysis}
                 className="font-inter text-lg px-8 py-6 bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground shadow-luxury hover:shadow-glow transition-all duration-500 group"
               >
                 Start Your Analysis

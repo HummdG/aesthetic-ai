@@ -1,6 +1,13 @@
 import { Button } from "../ui/Button";
+import { useRouter } from "next/navigation";
 
 const CTASection = () => {
+  const router = useRouter();
+
+  const handleStartAnalysis = () => {
+    router.push("/analysis");
+  };
+
   return (
     <section className="relative py-32 px-8 overflow-hidden">
       {/* Sophisticated background */}
@@ -61,16 +68,16 @@ const CTASection = () => {
                 </div>
 
                 <h2 className="font-playfair text-4xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-                  Sign in to
+                  Ready to
                   <span className="block text-transparent bg-gradient-to-r from-primary via-nude-pink to-rose-nude bg-clip-text">
-                    continue
+                    begin?
                   </span>
                 </h2>
 
                 <p className="font-inter text-lg lg:text-xl text-warm-gray max-w-2xl mx-auto leading-relaxed">
-                  Please sign in to access your personalized skin analysis
-                  survey and unlock AI-powered recommendations tailored
-                  specifically for your unique skin needs.
+                  Start your personalized skin analysis journey and unlock
+                  AI-powered recommendations tailored specifically for your
+                  unique skin needs.
                 </p>
               </div>
 
@@ -99,10 +106,11 @@ const CTASection = () => {
 
                 <Button
                   size="lg"
+                  onClick={handleStartAnalysis}
                   className="font-inter text-lg px-10 py-6 bg-gradient-to-r from-primary via-nude-pink to-rose-nude hover:from-nude-pink hover:to-primary text-primary-foreground shadow-luxury hover:shadow-glow transition-all duration-500 group relative overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center">
-                    Sign Up & Start Analysis
+                    Start Analysis
                     <svg
                       className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
                       fill="none"

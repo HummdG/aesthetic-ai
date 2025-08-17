@@ -3,27 +3,23 @@ import { cn } from "@/app/lib/utils";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
-    | "primary"
+    | "default"
     | "secondary"
     | "ghost"
     | "destructive"
     | "outline"
     | "nude";
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "default" | "lg" | "icon";
   loading?: boolean;
-  icon?: React.ReactNode;
-  iconPosition?: "left" | "right";
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
-      variant = "primary",
-      size = "md",
+      variant = "default",
+      size = "default",
       loading = false,
-      icon,
-      iconPosition = "left",
       children,
       disabled,
       ...props
@@ -31,10 +27,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center rounded-lg font-inter font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 tracking-wide";
+      "inline-flex items-center justify-center rounded-md font-inter font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50";
 
     const variants = {
-      primary:
+      default:
         "bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground shadow-luxury hover:shadow-glow",
       secondary:
         "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-luxury",
@@ -47,10 +43,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: "h-9 px-4 py-2 text-sm",
-      md: "h-10 px-6 py-2.5 text-base",
-      lg: "h-12 px-8 py-3 text-lg",
-      xl: "h-14 px-10 py-4 text-xl",
+      sm: "h-9 px-3 text-sm",
+      default: "h-10 px-4 py-2",
+      lg: "h-11 px-8 text-lg",
+      icon: "h-10 w-10",
     };
 
     const isDisabled = disabled || loading;
@@ -71,13 +67,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {loading && (
           <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         )}
-        {icon && iconPosition === "left" && !loading && (
-          <span className="mr-2">{icon}</span>
-        )}
         {children}
-        {icon && iconPosition === "right" && !loading && (
-          <span className="ml-2">{icon}</span>
-        )}
       </button>
     );
   }

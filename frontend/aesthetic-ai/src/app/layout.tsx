@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     siteName: "Aesthetic AI",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/social_preview.png",
         width: 1200,
         height: 630,
         alt: "Aesthetic AI - AI-powered beauty analysis",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     title: "Aesthetic AI - AI-Powered Beauty Analysis",
     description:
       "Professional aesthetic analysis using advanced AI technology. Get personalized recommendations for cosmetic treatments.",
-    images: ["/og-image.jpg"],
+    images: ["/social_preview.png"],
   },
   robots: {
     index: true,

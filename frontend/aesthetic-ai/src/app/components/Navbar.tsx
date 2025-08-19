@@ -32,23 +32,26 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="relative z-50 flex items-center justify-between px-8 py-6 bg-background/95 backdrop-blur-md border-b border-border/30">
-        <Link href="/" className="flex items-center space-x-3">
+      <nav className="relative z-50 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 lg:py-4 bg-background/95 backdrop-blur-md border-b border-border/30">
+        <Link
+          href="/"
+          className="flex items-center space-x-2 lg:space-x-3 flex-shrink-0"
+        >
           <div className="relative">
             <Image
               src="/logo.png"
               alt="Aesthetic AI"
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-xl shadow-glow"
+              width={32}
+              height={32}
+              className="h-8 w-8 lg:h-10 lg:w-10 rounded-xl shadow-glow"
               priority
             />
           </div>
-          <div>
-            <h1 className="font-playfair font-semibold text-xl text-foreground tracking-tight">
+          <div className="min-w-0">
+            <h1 className="font-playfair font-semibold text-base lg:text-xl text-foreground tracking-tight">
               Aesthetic AI
             </h1>
-            <p className="text-xs text-warm-gray font-inter font-medium tracking-wide">
+            <p className="text-xs text-warm-gray font-inter font-medium tracking-wide hidden lg:block">
               ADVANCED BEAUTY ANALYSIS
             </p>
           </div>
@@ -69,10 +72,10 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Auth Buttons */}
-        <div className="flex items-center space-x-4">
+        <div className="hidden lg:flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-4">
-              <span className="text-warm-gray font-inter hidden md:block">
+              <span className="text-warm-gray font-inter hidden xl:block">
                 Welcome, {user.email}
               </span>
               <Button
@@ -106,7 +109,7 @@ export default function Navbar() {
         <div className="lg:hidden">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-warm-gray hover:text-foreground focus:outline-none focus:text-foreground transition-colors duration-200"
+            className="text-warm-gray hover:text-foreground focus:outline-none focus:text-foreground transition-colors duration-200 p-2"
             aria-label="Toggle menu"
           >
             <svg
@@ -131,7 +134,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="lg:hidden relative z-40">
-          <div className="px-8 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border/30">
+          <div className="px-4 sm:px-6 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border/30">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -151,7 +154,10 @@ export default function Navbar() {
                     Welcome, {user.email}
                   </span>
                   <Button
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
                     variant="ghost"
                     className="w-full mt-2 font-inter text-warm-gray hover:text-foreground hover:bg-secondary/50"
                   >

@@ -54,13 +54,8 @@ const Navigation = () => {
           </div>
         </div>
 
-        {/* Desktop Navigation - Force hide on mobile */}
-        <div
-          className="items-center space-x-12 font-inter"
-          style={{
-            display: "none",
-          }}
-        >
+        {/* Desktop Navigation - Show only on desktop */}
+        <div className="hidden lg:flex items-center space-x-12 font-inter">
           {navLinks.map((link) => (
             <a
               key={link.name}
@@ -73,13 +68,8 @@ const Navigation = () => {
           ))}
         </div>
 
-        {/* Desktop Auth Buttons - Force hide on mobile */}
-        <div
-          className="items-center space-x-4"
-          style={{
-            display: "none",
-          }}
-        >
+        {/* Desktop Auth Buttons - Show only on desktop */}
+        <div className="hidden lg:flex items-center space-x-4">
           {user ? (
             <div className="flex items-center space-x-4">
               <span className="text-warm-gray font-inter hidden xl:block">
@@ -112,8 +102,8 @@ const Navigation = () => {
           )}
         </div>
 
-        {/* Mobile Hamburger Button - Always show for now */}
-        <div>
+        {/* Mobile Hamburger Button - Show only on mobile */}
+        <div className="lg:hidden">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="text-warm-gray hover:text-foreground focus:outline-none focus:text-foreground transition-colors duration-200 p-2"
@@ -139,9 +129,9 @@ const Navigation = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu Dropdown - Show only on mobile when menu is open */}
       {isMenuOpen && (
-        <div className="relative z-40">
+        <div className="lg:hidden relative z-40">
           <div className="px-4 sm:px-6 pt-2 pb-3 space-y-1 bg-background/95 backdrop-blur-md border-b border-border/30">
             {/* Mobile Navigation Links */}
             {navLinks.map((link) => (

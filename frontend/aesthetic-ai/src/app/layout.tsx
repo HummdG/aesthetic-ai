@@ -50,10 +50,11 @@ export const metadata: Metadata = {
     siteName: "Aesthetic AI",
     images: [
       {
-        url: "/social_preview.png",
+        url: "https://aesthetic-ai.vercel.app/social_preview.png",
         width: 1200,
         height: 630,
         alt: "Aesthetic AI - AI-powered beauty analysis",
+        type: "image/png",
       },
     ],
     locale: "en_US",
@@ -64,7 +65,8 @@ export const metadata: Metadata = {
     title: "Aesthetic AI - AI-Powered Beauty Analysis",
     description:
       "Professional aesthetic analysis using advanced AI technology. Get personalized recommendations for cosmetic treatments.",
-    images: ["/social_preview.png"],
+    images: ["https://aesthetic-ai.vercel.app/social_preview.png"],
+    creator: "@aesthetic_ai",
   },
   robots: {
     index: true,

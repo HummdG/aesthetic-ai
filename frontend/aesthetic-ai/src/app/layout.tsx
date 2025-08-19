@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "Aesthetic AI - AI-Powered Beauty Analysis",
     description:
       "Professional aesthetic analysis using advanced AI technology. Get personalized recommendations for cosmetic treatments.",
-    images: ["https://aesthetic-ai.vercel.app/social_preview.png"],
+    images: ["social_preview.png"],
     creator: "@aesthetic_ai",
   },
   robots: {

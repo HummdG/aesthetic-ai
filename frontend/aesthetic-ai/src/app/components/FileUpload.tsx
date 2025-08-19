@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { Button } from "./ui/Button";
 
 interface FileUploadProps {
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -18,9 +19,9 @@ export default function FileUpload({
   };
 
   return (
-    <div className="border-2 border-dashed border-nude-300 rounded-xl p-8 text-center bg-nude-50 hover:border-primary transition-colors">
+    <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center bg-gradient-to-br from-nude-pink/5 to-champagne/10 hover:border-primary/50 transition-all duration-300 hover:shadow-luxury">
       {/* Upload Icon */}
-      <div className="w-16 h-16 mx-auto mb-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+      <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-primary/10 to-nude-pink/20 rounded-full flex items-center justify-center shadow-glow backdrop-blur-sm border border-primary/20">
         <svg
           className="w-8 h-8 text-primary"
           fill="none"
@@ -36,14 +37,14 @@ export default function FileUpload({
         </svg>
       </div>
 
-      <h3 className="text-lg font-serif font-semibold text-brown-900 mb-2">
+      <h3 className="text-lg font-playfair font-semibold text-foreground mb-2">
         Upload Photo for Analysis
       </h3>
 
-      <p className="text-brown-600 font-body mb-6">
+      <p className="text-warm-gray font-inter mb-6">
         Drop your image here or{" "}
         <span
-          className="text-primary font-semibold cursor-pointer"
+          className="text-primary font-semibold cursor-pointer hover:text-primary/80 transition-colors"
           onClick={handleChooseClick}
         >
           browse files
@@ -59,24 +60,25 @@ export default function FileUpload({
         className="hidden"
       />
 
-      {/* Action Buttons - FIXED HOVER CONTRAST */}
+      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <button
+        <Button
           onClick={handleChooseClick}
-          className="flex-1 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-full font-body font-semibold transition-colors duration-200 shadow-sm cursor-pointer select-none"
+          className="flex-1 bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground font-inter font-semibold shadow-luxury hover:shadow-glow transition-all duration-300"
         >
           Choose File
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onCameraClick}
-          className="flex-1 border-2 border-primary text-primary hover:bg-primary-hover hover:text-white hover:border-primary-hover px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 cursor-pointer select-none"
+          variant="outline"
+          className="flex-1 border-2 border-primary/40 hover:border-primary hover:bg-primary/5 text-foreground font-inter font-semibold transition-all duration-300"
         >
           Use Camera
-        </button>
+        </Button>
       </div>
 
       {/* File Info */}
-      <div className="text-sm text-brown-500 font-body">
+      <div className="text-sm text-warm-gray font-inter">
         <p>Supports JPG, PNG, WEBP files up to 10MB</p>
         <div className="flex justify-center gap-4 mt-2 text-xs">
           <span>High Resolution Preferred</span>

@@ -17,6 +17,7 @@ import { SkinTreatmentStep } from "./survey/steps/SkinTreatmentStep";
 import { useAuth } from "../contexts/AuthContext";
 import { apiService } from "../services/api";
 import AuthModal from "./auth/AuthModal";
+import { Button } from "./ui/Button";
 
 interface UserSurveyFormProps {
   onComplete: (data: UserSurveyData) => void;
@@ -298,43 +299,62 @@ const UserSurveyForm: React.FC<UserSurveyFormProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-nude-50 to-nude-100 py-4 sm:py-8">
+    <div className="min-h-screen bg-background py-4 sm:py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Progress Bar */}
         <ProgressBar steps={steps} currentStep={currentStep} />
 
         {/* Form Content */}
-        <div className="bg-white rounded-xl shadow-elegant p-4 sm:p-8 mb-4 sm:mb-6">
+        <div className="bg-card/40 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-deep border border-primary/20 p-6 sm:p-8 lg:p-12 mb-4 sm:mb-6">
           {!user && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-brown-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserIcon className="w-8 h-8 text-white" />
+            <div className="text-center py-12">
+              <div className="mb-8">
+                <div className="relative inline-block">
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary via-nude-pink to-rose-nude rounded-2xl flex items-center justify-center mx-auto shadow-glow">
+                    <UserIcon className="w-10 h-10 text-primary-foreground" />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-serif font-semibold text-brown-900 mb-2">
-                Sign in to continue
-              </h3>
-              <p className="text-brown-600 font-body mb-6">
-                Please sign in to access your personalized skin analysis survey
-              </p>
-              <div className="flex justify-center space-x-4">
-                <button
+
+              <div className="mb-10 space-y-6">
+                <div className="inline-block mb-4">
+                  <span className="px-4 py-2 bg-gradient-to-r from-primary/20 to-nude-pink/20 rounded-full text-sm font-inter font-medium text-warm-gray border border-primary/30 tracking-wide">
+                    ✨ PERSONALIZED ANALYSIS
+                  </span>
+                </div>
+
+                <h3 className="font-playfair text-2xl sm:text-3xl font-bold text-foreground mb-4">
+                  Sign in to continue
+                </h3>
+                <p className="font-inter text-lg text-warm-gray max-w-md mx-auto leading-relaxed">
+                  Please sign in to access your personalized skin analysis
+                  survey and unlock AI-powered recommendations tailored
+                  specifically for your unique skin needs.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
                   onClick={() => {
                     setAuthMode("login");
                     setIsAuthModalOpen(true);
                   }}
-                  className="px-6 py-3 border border-primary text-primary hover:bg-primary hover:text-white rounded-lg font-semibold transition-colors"
+                  variant="outline"
+                  size="lg"
+                  className="font-inter text-lg px-8 py-4 border-2 border-primary/40 hover:border-primary hover:bg-primary/5 text-foreground transition-all duration-300"
                 >
                   Sign In
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => {
                     setAuthMode("signup");
                     setIsAuthModalOpen(true);
                   }}
-                  className="px-6 py-3 bg-primary text-white hover:bg-primary-hover rounded-lg font-semibold transition-colors"
+                  size="lg"
+                  className="font-inter text-lg px-8 py-4 bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground shadow-luxury hover:shadow-glow transition-all duration-300"
                 >
                   Sign Up
-                </button>
+                </Button>
               </div>
             </div>
           )}

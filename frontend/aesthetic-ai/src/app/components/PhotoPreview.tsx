@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Button } from "./ui/Button";
 
 interface PhotoPreviewProps {
   previewUrl: string;
@@ -19,7 +20,7 @@ export default function PhotoPreview({
     <div className="space-y-6">
       {/* Photo Display */}
       <div className="relative">
-        <div className="overflow-hidden rounded-xl border border-nude-200">
+        <div className="overflow-hidden rounded-xl border border-border shadow-luxury">
           <Image
             src={previewUrl}
             alt="Uploaded image for analysis"
@@ -29,13 +30,13 @@ export default function PhotoPreview({
           />
           {/* Analysis Overlay */}
           {isAnalyzing && (
-            <div className="absolute inset-0 bg-white/90 flex items-center justify-center">
+            <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <h3 className="text-lg font-serif font-semibold text-brown-900 mb-2">
+                <h3 className="text-lg font-playfair font-semibold text-foreground mb-2">
                   Analyzing Image
                 </h3>
-                <p className="text-brown-700 font-body">
+                <p className="text-warm-gray font-inter">
                   Processing facial features...
                 </p>
               </div>
@@ -44,30 +45,29 @@ export default function PhotoPreview({
         </div>
       </div>
 
-      {/* Action Buttons - FIXED VISIBILITY */}
+      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <button
+        <Button
           onClick={onAnalyze}
           disabled={isAnalyzing}
-          className="flex-1 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 shadow-sm flex items-center justify-center select-none"
+          loading={isAnalyzing}
+          className="flex-1 bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground font-inter font-semibold shadow-luxury hover:shadow-glow transition-all duration-300"
         >
-          {isAnalyzing && (
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-          )}
           {isAnalyzing ? "Analyzing..." : "Start Analysis"}
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={onReset}
-          className="sm:w-auto border-2 border-nude-300 hover:border-primary text-brown-700 hover:text-primary px-6 py-3 rounded-full font-body font-semibold transition-all duration-200 cursor-pointer select-none"
+          variant="outline"
+          className="sm:w-auto border-2 border-border hover:border-primary text-warm-gray hover:text-foreground font-inter font-semibold transition-all duration-300"
         >
           New Image
-        </button>
+        </Button>
       </div>
 
       {/* Simple info */}
       {!isAnalyzing && (
-        <div className="bg-nude-50 rounded-lg p-4 text-sm text-brown-600 font-body text-center">
+        <div className="bg-gradient-to-r from-nude-pink/10 to-champagne/20 rounded-lg p-4 text-sm text-warm-gray font-inter text-center border border-primary/10">
           Click "Start Analysis" to begin AI-powered facial analysis
         </div>
       )}

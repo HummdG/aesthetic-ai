@@ -120,7 +120,7 @@ export default function CameraCapture({
     <div className="space-y-6">
       <div className="relative">
         {/* Clean Camera Frame with Face Guides */}
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-black">
+        <div className="overflow-hidden rounded-xl border border-border bg-black shadow-luxury">
           <video
             ref={videoRef}
             className="w-full h-80 sm:h-96 md:h-[32rem] lg:h-[36rem] object-cover"
@@ -137,21 +137,21 @@ export default function CameraCapture({
           {/* Face Overlay Guides - Updated for larger space */}
           <div className="absolute inset-0 pointer-events-none">
             {/* Corner indicators */}
-            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-white/80 rounded-tl-lg"></div>
-            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-white/80 rounded-tr-lg"></div>
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-white/80 rounded-bl-lg"></div>
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-white/80 rounded-br-lg"></div>
+            <div className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-primary/80 rounded-tl-lg"></div>
+            <div className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-primary/80 rounded-tr-lg"></div>
+            <div className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-primary/80 rounded-bl-lg"></div>
+            <div className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-primary/80 rounded-br-lg"></div>
 
             {/* Center face guide - oval for face shape (adjusted for larger area) */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-40 h-48 sm:w-48 sm:h-56 md:w-52 md:h-60 border-2 border-white/60 rounded-full"></div>
+              <div className="w-40 h-48 sm:w-48 sm:h-56 md:w-52 md:h-60 border-2 border-primary/60 rounded-full"></div>
               {/* Center dot */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/80 rounded-full"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-primary/80 rounded-full"></div>
             </div>
 
             {/* Instruction text overlay */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2">
-              <p className="text-white text-sm font-medium text-center">
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 border border-primary/20">
+              <p className="text-foreground text-sm font-inter font-medium text-center">
                 Position your face in the oval
               </p>
             </div>
@@ -159,10 +159,10 @@ export default function CameraCapture({
 
           {/* Loading indicator */}
           {isLoading && (
-            <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
+            <div className="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center">
-                <div className="loading-spinner mx-auto mb-4 w-8 h-8 border-indigo-600"></div>
-                <p className="text-lg font-medium text-gray-900">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-lg font-playfair font-medium text-foreground">
                   Initializing camera...
                 </p>
               </div>
@@ -172,12 +172,14 @@ export default function CameraCapture({
       </div>
 
       {/* Camera Instructions */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">Camera Guidelines:</h4>
-        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+      <div className="bg-gradient-to-r from-nude-pink/10 to-champagne/20 rounded-lg p-4 border border-primary/10">
+        <h4 className="font-playfair font-medium text-foreground mb-2">
+          Camera Guidelines:
+        </h4>
+        <div className="grid grid-cols-2 gap-2 text-sm text-warm-gray font-inter">
           <div className="flex items-center">
             <svg
-              className="w-4 h-4 text-gray-400 mr-2"
+              className="w-4 h-4 text-primary mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -193,7 +195,7 @@ export default function CameraCapture({
           </div>
           <div className="flex items-center">
             <svg
-              className="w-4 h-4 text-gray-400 mr-2"
+              className="w-4 h-4 text-primary mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -205,11 +207,11 @@ export default function CameraCapture({
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>Hold device steady</span>
+            <span>Remove sunglasses</span>
           </div>
           <div className="flex items-center">
             <svg
-              className="w-4 h-4 text-gray-400 mr-2"
+              className="w-4 h-4 text-primary mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -221,11 +223,11 @@ export default function CameraCapture({
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>Natural expression</span>
+            <span>Clear facial view</span>
           </div>
           <div className="flex items-center">
             <svg
-              className="w-4 h-4 text-gray-400 mr-2"
+              className="w-4 h-4 text-primary mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -244,10 +246,10 @@ export default function CameraCapture({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <button
+        <Button
           onClick={handleCapturePhoto}
           disabled={isLoading}
-          className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none"
+          className="flex-1 bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground font-inter font-semibold shadow-luxury hover:shadow-glow transition-all duration-300"
         >
           <span className="flex items-center justify-center">
             <svg
@@ -271,11 +273,12 @@ export default function CameraCapture({
             </svg>
             Capture Photo
           </span>
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={onCancel}
-          className="btn-secondary sm:w-auto cursor-pointer select-none"
+          variant="outline"
+          className="sm:w-auto border-2 border-border hover:border-primary text-warm-gray hover:text-foreground font-inter font-semibold transition-all duration-300"
         >
           <span className="flex items-center justify-center">
             <svg
@@ -293,7 +296,7 @@ export default function CameraCapture({
             </svg>
             Cancel
           </span>
-        </button>
+        </Button>
       </div>
 
       {/* Hidden canvas for photo capture */}

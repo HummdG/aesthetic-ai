@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import UserSurveyForm from "../components/UserSurveyForm";
 import Header from "../components/Header";
 import UploadSection from "../components/UploadSection";
 import SkinAnalysisResults from "../components/SkinAnalysisResults";
 import Navbar from "../components/Navbar";
+import { Button } from "../components/ui/Button";
+import AuthModal from "../components/auth/AuthModal";
 import { SkinAnalysisResult } from "../types/skinAnalysis";
 import { UserSurveyData } from "../types/userSurvey";
 import { useAuth } from "../contexts/AuthContext";
@@ -17,26 +20,34 @@ import { useEmailVerificationGuard } from "../hooks/useEmailVerificationGuard";
 type AppState = "survey" | "upload" | "analysis" | "results";
 
 const AnalysisPage: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>("survey");
+  const searchParams = useSearchParams();
+  const isFreeMode = searchParams.get("mode") === "free";
+
+  const [appState, setAppState] = useState<AppState>(
+    isFreeMode ? "upload" : "survey"
+  );
   const [analysis, setAnalysis] = useState<SkinAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentSurvey, setCurrentSurvey] = useState<UserSurveyData | null>(
     null
   );
+  const [showSignupPromotion, setShowSignupPromotion] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
 
   const { user, getAuthToken } = useAuth();
   const { canAccess, requiresVerification } = useEmailVerificationGuard();
 
   // Reset app state when user logs out
   useEffect(() => {
-    if (!user && appState !== "survey") {
+    if (!user && appState !== "survey" && !isFreeMode) {
       setAppState("survey");
       setCurrentSurvey(null);
       setAnalysis(null);
       setError(null);
     }
-  }, [user, appState]);
+  }, [user, appState, isFreeMode]);
 
   // Define currentUser as the survey data when available
   const currentUser = currentSurvey;
@@ -75,6 +86,11 @@ const AnalysisPage: React.FC = () => {
       );
       setAnalysis(result);
       setAppState("results");
+
+      // Show signup promotion for free users after analysis
+      if (isFreeMode && !user) {
+        setShowSignupPromotion(true);
+      }
     } catch (err) {
       console.error("Analysis failed:", err);
       setError(err instanceof Error ? err.message : "Analysis failed");
@@ -89,13 +105,20 @@ const AnalysisPage: React.FC = () => {
     setAnalysis(null);
     setError(null);
     setAppState("upload");
+    setShowSignupPromotion(false);
   };
 
   // Handle new analysis - go back to survey
   const handleNewAnalysis = () => {
     setAnalysis(null);
     setError(null);
-    setAppState("survey");
+    setAppState(isFreeMode ? "upload" : "survey");
+    setShowSignupPromotion(false);
+  };
+
+  const handleSignupPromotion = () => {
+    setAuthMode("signup");
+    setIsAuthModalOpen(true);
   };
 
   return (
@@ -105,8 +128,29 @@ const AnalysisPage: React.FC = () => {
         {/* Header */}
         <Header />
 
+        {/* Free Mode Banner */}
+        {isFreeMode && !user && (
+          <div className="max-w-6xl mx-auto mb-8">
+            <div className="bg-gradient-to-r from-nude-pink/10 to-champagne/20 border border-primary/20 rounded-xl p-6 text-center">
+              <h3 className="font-playfair text-lg font-semibold text-foreground mb-2">
+                🎉 Free Analysis Mode
+              </h3>
+              <p className="text-warm-gray font-inter text-sm">
+                You're using our free analysis tool. For personalized
+                recommendations and detailed insights,
+                <button
+                  onClick={handleSignupPromotion}
+                  className="text-primary hover:text-primary/80 font-semibold ml-1 underline"
+                >
+                  sign up for free
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Survey State */}
-        {appState === "survey" && (
+        {appState === "survey" && !isFreeMode && (
           <UserSurveyForm
             onComplete={handleSurveyComplete}
             onSkip={handleSurveySkip}
@@ -117,7 +161,7 @@ const AnalysisPage: React.FC = () => {
         {appState !== "survey" && (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* User Info Banner */}
-            {currentUser && (
+            {currentUser && !isFreeMode && (
               <div className="bg-card rounded-xl border border-border p-6 shadow-luxury">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -161,10 +205,13 @@ const AnalysisPage: React.FC = () => {
               <div className="bg-card rounded-xl border border-border p-8 shadow-luxury">
                 <div className="mb-6 text-center">
                   <h2 className="text-2xl font-playfair font-semibold text-foreground mb-2">
-                    {currentUser ? "Personalized " : ""}Skin Condition Analysis
+                    {isFreeMode ? "Free " : currentUser ? "Personalized " : ""}
+                    Skin Condition Analysis
                   </h2>
                   <p className="text-warm-gray font-inter">
-                    {currentUser
+                    {isFreeMode
+                      ? "Upload a clear facial image for AI-powered basic skin analysis"
+                      : currentUser
                       ? "Upload a clear facial image for AI-powered analysis based on your profile"
                       : "Upload a clear facial image for AI-powered skin analysis and ingredient recommendations"}
                   </p>
@@ -187,7 +234,9 @@ const AnalysisPage: React.FC = () => {
                     </div>
                     <div className="text-center">
                       <p className="text-warm-gray font-inter mb-2">
-                        {currentUser
+                        {isFreeMode
+                          ? "Processing your image with basic AI analysis..."
+                          : currentUser
                           ? "Processing your image with personalized analysis..."
                           : "Processing your image with AI skin analysis..."}
                       </p>
@@ -239,11 +288,17 @@ const AnalysisPage: React.FC = () => {
                 <div className="mb-6 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-playfair font-semibold text-foreground mb-2">
-                      {currentUser ? "Your Personalized " : ""}Skin Analysis
-                      Results
+                      {isFreeMode
+                        ? "Your Free "
+                        : currentUser
+                        ? "Your Personalized "
+                        : ""}
+                      Skin Analysis Results
                     </h2>
                     <p className="text-warm-gray font-inter">
-                      {currentUser
+                      {isFreeMode
+                        ? "Basic AI-powered skin condition assessment"
+                        : currentUser
                         ? "AI-powered analysis customized based on your profile and medical history"
                         : "AI-powered skin condition assessment and ingredient recommendations"}
                     </p>
@@ -264,8 +319,45 @@ const AnalysisPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Signup Promotion for Free Users */}
+                {showSignupPromotion && isFreeMode && !user && (
+                  <div className="mb-6 p-6 bg-gradient-to-r from-primary/10 to-nude-pink/20 border border-primary/30 rounded-xl">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-primary to-nude-pink rounded-2xl mx-auto flex items-center justify-center shadow-glow mb-4">
+                        <svg
+                          className="w-8 h-8 text-primary-foreground"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="font-playfair text-xl font-semibold text-foreground mb-2">
+                        Unlock Your Full Personalized Plan
+                      </h3>
+                      <p className="text-warm-gray font-inter mb-4">
+                        Get detailed ingredient recommendations, personalized
+                        routines, and exclusive product suggestions based on
+                        your skin analysis.
+                      </p>
+                      <Button
+                        onClick={handleSignupPromotion}
+                        className="bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground shadow-luxury hover:shadow-glow transition-all duration-300"
+                      >
+                        Sign Up for Free - Get Full Analysis
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Enhanced Safety Notice for Personalized Analysis */}
-                {currentUser && (
+                {currentUser && !isFreeMode && (
                   <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <div className="flex">
                       <div className="flex-shrink-0">
@@ -304,6 +396,13 @@ const AnalysisPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </div>
   );
 };

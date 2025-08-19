@@ -10,6 +10,10 @@ const HeroSection = () => {
     router.push("/analysis");
   };
 
+  const handleGetStartedFree = () => {
+    router.push("/analysis?mode=free");
+  };
+
   return (
     <section className="relative min-h-screen overflow-hidden">
       {/* Background gradient */}
@@ -19,21 +23,21 @@ const HeroSection = () => {
       <div className="absolute top-20 right-20 w-32 h-32 bg-gradient-to-br from-champagne/30 to-nude-pink/20 rounded-full blur-xl"></div>
       <div className="absolute bottom-40 left-20 w-48 h-48 bg-gradient-to-br from-soft-taupe/20 to-rose-nude/30 rounded-full blur-2xl"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-8 py-20">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         {/* Main content in asymmetrical layout */}
-        <div className="grid lg:grid-cols-12 gap-16 items-center min-h-screen">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center min-h-[calc(100vh-8rem)]">
           {/* Left content - taking 7 columns */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="space-y-6">
+          <div className="lg:col-span-7 space-y-6 lg:space-y-8">
+            <div className="space-y-4 lg:space-y-6">
               <div className="inline-block">
                 <span className="px-4 py-2 bg-gradient-to-r from-nude-pink/20 to-champagne/20 rounded-full text-sm font-inter font-medium text-warm-gray border border-primary/20">
                   ✨ Advanced AI Technology
                 </span>
               </div>
 
-              <h1 className="font-playfair text-6xl lg:text-8xl font-bold text-foreground leading-[0.9] tracking-tight">
+              <h1 className="font-playfair text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-foreground leading-[1.15] tracking-tight">
                 AI-Powered
-                <span className="block text-transparent bg-gradient-to-r from-primary via-nude-pink to-rose-nude bg-clip-text">
+                <span className="block text-transparent bg-gradient-to-r from-primary via-nude-pink to-rose-nude bg-clip-text pb-4 pt-1">
                   Skin Analysis
                 </span>
               </h1>
@@ -51,7 +55,7 @@ const HeroSection = () => {
                 onClick={handleStartAnalysis}
                 className="font-inter text-lg px-8 py-6 bg-gradient-to-r from-primary to-nude-pink hover:from-nude-pink hover:to-rose-nude text-primary-foreground shadow-luxury hover:shadow-glow transition-all duration-500 group"
               >
-                Start Your Analysis
+                Start Full Analysis
                 <svg
                   className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
                   fill="none"
@@ -68,11 +72,12 @@ const HeroSection = () => {
               </Button>
 
               <Button
+                onClick={handleGetStartedFree}
                 variant="outline"
                 size="lg"
                 className="font-inter text-lg px-8 py-6 border-2 border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground"
               >
-                Watch Demo
+                Try Free Analysis
               </Button>
             </div>
 

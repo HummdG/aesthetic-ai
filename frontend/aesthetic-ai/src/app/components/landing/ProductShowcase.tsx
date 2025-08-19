@@ -24,7 +24,7 @@ const ProductShowcase = () => {
   ];
 
   return (
-    <section className="relative py-32 px-8 bg-gradient-to-b from-background to-cream overflow-hidden">
+    <section className="relative py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-background to-cream overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute top-40 right-0 w-96 h-96 bg-gradient-to-br from-nude-pink/10 to-champagne/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 left-0 w-80 h-80 bg-gradient-to-br from-soft-taupe/15 to-rose-nude/10 rounded-full blur-3xl"></div>
@@ -38,9 +38,9 @@ const ProductShowcase = () => {
             </span>
           </div>
 
-          <h2 className="font-playfair text-5xl lg:text-7xl font-bold text-foreground mb-8 leading-tight">
+          <h2 className="font-playfair text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-8 leading-[1.15]">
             Perfect Your
-            <span className="block text-transparent bg-gradient-to-r from-primary via-nude-pink to-rose-nude bg-clip-text">
+            <span className="block text-transparent bg-gradient-to-r from-primary via-nude-pink to-rose-nude bg-clip-text pb-4 pt-1">
               Beauty Ritual
             </span>
           </h2>

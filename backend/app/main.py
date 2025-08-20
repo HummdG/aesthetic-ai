@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 # Import your existing routers
-from .routers import health, analysis, auth
+from .routers import health, analysis, auth, products
 from .models import create_tables
 from .config import settings
 
@@ -30,6 +30,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(analysis.router, prefix="/api/v1", tags=["analysis"])
 app.include_router(auth.router, prefix="/api/v1", tags=["authentication"])
+app.include_router(products.router, prefix="/api/v1", tags=["products"])
 
 # Initialize database tables on startup
 @app.on_event("startup")

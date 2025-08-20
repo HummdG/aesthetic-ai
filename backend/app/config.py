@@ -67,6 +67,14 @@ class Settings:
     CURRENCY: str = "GBP"
     CURRENCY_SYMBOL: str = "£"
     
+    # Product matching settings
+    RAINFOREST_API_KEY: str = os.getenv("RAINFOREST_API_KEY", "")
+    AMAZON_DOMAIN: str = os.getenv("AMAZON_DOMAIN", "amazon.co.uk")
+    TOP_N_LIVE_CHECK: int = int(os.getenv("TOP_N_LIVE_CHECK", "20"))
+    LIVE_CHECK_TIMEOUT_SECONDS: int = int(os.getenv("LIVE_CHECK_TIMEOUT_SECONDS", "8"))
+    COUNTRY_WHITELIST: str = os.getenv("COUNTRY_WHITELIST", "GB")
+    REDIS_URL: str = os.getenv("REDIS_URL", "")
+    
     @property
     def openai_key_available(self) -> bool:
         """Check if OpenAI API key is available"""
@@ -81,6 +89,11 @@ class Settings:
     def is_production(self) -> bool:
         """Check if running in production"""
         return self.ENVIRONMENT == "production"
+    
+    @property
+    def product_matching_available(self) -> bool:
+        """Check if product matching service is properly configured"""
+        return bool(self.RAINFOREST_API_KEY)
 
 # Global settings instance
 settings = Settings()
@@ -102,4 +115,9 @@ if settings.firebase_admin_available:
 else:
     logger.warning("⚠️ Firebase Admin SDK not configured")
 
-logger.info(f"🔧 Configuration loaded - Model: {settings.OPENAI_MODEL}, Currency: {settings.CURRENCY}")
+if settings.product_matching_available:
+    logger.info("✅ Product matching service configured")
+else:
+    logger.warning("⚠️ RAINFOREST_API_KEY not found - product matching will be limited")
+
+logger.info(f"🔧 Configuration loaded - Model: {settings.OPENAI_MODEL}, Currency: {settings.CURRENCY}, Countries: {settings.COUNTRY_WHITELIST}")

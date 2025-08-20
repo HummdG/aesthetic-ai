@@ -8,7 +8,10 @@ from .schemas import (
     SkinAnalysisResponse,
     HealthCheckResponse,
     ErrorResponse,
-    TreatmentRecommendation
+    TreatmentRecommendation,
+    ProductMatchRequest,
+    MatchedProduct,
+    ProductMatchResponse
 )
 
 # Survey models (if you need them elsewhere)
@@ -22,6 +25,7 @@ from .survey_schemas import (
 # Database models
 from .database import Base, get_db, create_tables, drop_tables
 from .user import User, UserSurvey, SkinAnalysis
+from .product import Product, LiveSnapshot
 
 __all__ = [
     # Core analysis models
@@ -30,6 +34,9 @@ __all__ = [
     "HealthCheckResponse",
     "ErrorResponse",
     "TreatmentRecommendation",
+    "ProductMatchRequest",
+    "MatchedProduct",
+    "ProductMatchResponse",
     
     # Survey models
     "UserMedicalHistory",
@@ -44,5 +51,7 @@ __all__ = [
     "drop_tables",
     "User",
     "UserSurvey",
-    "SkinAnalysis"
+    "SkinAnalysis",
+    "Product",
+    "LiveSnapshot"
 ]

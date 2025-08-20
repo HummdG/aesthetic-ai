@@ -16,6 +16,14 @@ from .parsing import (
     clean_llm_response,              # ✅ This exists
     validate_skin_analysis_response  # ✅ This exists (note the correct name)
 )
+from .ingredients import (
+    normalise_term,
+    normalise_list,
+    get_ingredient_aliases,
+    expand_ingredient_search_terms,
+    check_ingredient_match,
+    check_avoid_ingredients
+)
 
 __all__ = [
     # Pricing utilities
@@ -27,5 +35,12 @@ __all__ = [
     # Parsing utilities
     "parse_skin_analysis_response",
     "clean_llm_response",
-    "validate_skin_analysis_response"
+    "validate_skin_analysis_response",
+    # Ingredient utilities
+    "normalise_term",
+    "normalise_list",
+    "get_ingredient_aliases",
+    "expand_ingredient_search_terms",
+    "check_ingredient_match",
+    "check_avoid_ingredients"
 ]

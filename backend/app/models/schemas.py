@@ -47,6 +47,42 @@ class TreatmentRecommendation(BaseModel):
     estimatedCost: str = Field(..., description="Estimated cost range (e.g., '£400-500')")
 
 
+# Product matching schemas
+class ProductMatchRequest(BaseModel):
+    """Model for product matching request"""
+    country: str = Field(..., description="ISO country code (e.g., 'GB')")
+    location: Optional[dict] = Field(None, description="Location details with optional postcode, lat, lon")
+    required_ingredients: List[str] = Field(..., description="List of required skincare ingredients")
+    avoid_ingredients: Optional[List[str]] = Field(default=[], description="List of ingredients to avoid")
+    max_price: Optional[float] = Field(None, description="Maximum price filter")
+    currency: Optional[str] = Field(None, description="Preferred currency (inferred from country if not provided)")
+
+
+class MatchedProduct(BaseModel):
+    """Model for matched product result"""
+    id: str = Field(..., description="Product ID")
+    retailer: str = Field(..., description="Retailer name")
+    retailer_sku: str = Field(..., description="Retailer SKU")
+    brand: str = Field(..., description="Product brand")
+    name: str = Field(..., description="Product name")
+    country: str = Field(..., description="Country code")
+    currency: str = Field(..., description="Currency code")
+    price: Optional[float] = Field(None, description="Current price")
+    price_per_ml: Optional[float] = Field(None, description="Price per ml")
+    formatted_price: Optional[str] = Field(None, description="Formatted price string")
+    pdp_url: str = Field(..., description="Product detail page URL")
+    image_url: Optional[str] = Field(None, description="Product image URL")
+    ingredients_normalised: List[str] = Field(..., description="Normalised ingredient list")
+    availability: str = Field(..., description="Availability status")
+    score: float = Field(..., description="Matching score")
+    last_verified: Optional[str] = Field(None, description="Last verification timestamp")
+
+
+class ProductMatchResponse(BaseModel):
+    """Model for product matching response"""
+    generated_at: str = Field(..., description="Response generation timestamp")
+    currency: str = Field(..., description="Currency used for pricing")
+    results: List[MatchedProduct] = Field(..., description="List of matched products")
 
 
 
